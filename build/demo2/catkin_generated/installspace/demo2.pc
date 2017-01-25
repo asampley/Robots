@@ -1,8 +1,0 @@
-prefix=/home/sampley/ROS/install
-
-Name: demo2
-Description: Description of demo2
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/sampley/ROS/install/lib 
-Requires: 

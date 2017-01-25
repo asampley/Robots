@@ -1,8 +1,0 @@
-prefix=/home/sampley/ROS/install
-
-Name: competition1
-Description: Description of competition1
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/sampley/ROS/install/lib 
-Requires: 
