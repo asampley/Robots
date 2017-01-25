@@ -1,0 +1,15 @@
+<launch>
+	<include file="$(find openni2_launch)/launch/openni2.launch"/>
+	<include file="$(find turtlebot_bringup)/launch/minimal.launch"/>
+	
+	<node name="depthimage_to_laserscan" pkg="depthimage_to_laserscan" type="depthimage_to_laserscan">
+		<remap from="image" to="camera/depth/image_rect"/>
+	</node>
+
+	<node pkg="demo2" type="twist_to_ramped_twist.py" name="twist_to_ramped">
+		<remap from="twist_out" to="cmd_vel_mux/input/teleop"/>
+	</node>
+	<node pkg="demo2" type="wander.py" name="wander">
+		<remap from="cmd_vel" to="twist_in"/>
+	</node>
+</launch>

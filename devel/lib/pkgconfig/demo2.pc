@@ -1,0 +1,8 @@
+prefix=/home/sampley/ROS/devel
+
+Name: demo2
+Description: Description of demo2
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/sampley/ROS/devel/lib 
+Requires: 

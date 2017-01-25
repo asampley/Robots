@@ -1,0 +1,2 @@
+beginner_tutorials:competition1:demo1:demo2
+-DCATKIN_DEVEL_PREFIX=/home/sampley/ROS/devel -DCMAKE_INSTALL_PREFIX=/home/sampley/ROS/install -G Unix Makefiles

@@ -1,0 +1,8 @@
+prefix=/home/sampley/ROS/devel
+
+Name: competition1
+Description: Description of competition1
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/sampley/ROS/devel/lib 
+Requires: 
