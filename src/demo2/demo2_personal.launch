@@ -1,0 +1,9 @@
+<launch>
+	<include file="$(find openni2_launch)/launch/openni2.launch"/>
+	
+	<node name="depthimage_to_laserscan" pkg="depthimage_to_laserscan" type="depthimage_to_laserscan">
+		<remap from="image" to="camera/depth/image_rect"/>
+	</node>
+
+	<!--node name="rviz" pkg="rviz" type="rviz"/-->
+</launch>

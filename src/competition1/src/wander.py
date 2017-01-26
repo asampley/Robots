@@ -39,7 +39,7 @@ while not rospy.is_shutdown():
       # BEGIN FORWARD
       if (g_range_ahead < 0.8 or rospy.Time.now() > state_change_time):
         driving_forward = False
-        state_change_time = rospy.Time.now() + rospy.Duration(5)
+        state_change_time = rospy.Time.now() + rospy.Duration(2)
       # END FORWARD
     else: # we're not driving_forward
       # BEGIN TURNING
