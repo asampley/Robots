@@ -12,4 +12,6 @@
 	<node pkg="competition1" type="wander.py" name="wander">
 		<remap from="cmd_vel" to="twist_in"/>
 	</node>
+
+	<node pkg="joy" type="joy_node" name="joy_node"/>
 </launch>
