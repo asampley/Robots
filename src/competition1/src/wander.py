@@ -13,7 +13,10 @@ def scan_callback(msg):
 
   #print "Data: " + str(ranges)
 
-  g_range_ahead = min(ranges)
+  #print "ahhhh!"
+
+  if(ranges):
+    g_range_ahead = min(ranges)
 
 def joy_callback(msg):
   global go
@@ -24,6 +27,7 @@ def joy_callback(msg):
     go = not go
 
 go = False
+#go = True
 g_range_ahead = 1 # anything to start
 scan_sub = rospy.Subscriber('scan', LaserScan, scan_callback)
 joy_sub = rospy.Subscriber('joy', Joy, joy_callback)
@@ -33,8 +37,11 @@ state_change_time = rospy.Time.now()
 driving_forward = True
 rate = rospy.Rate(10)
 
+"""
 while not rospy.is_shutdown():
+  #print "looping"
   if go:
+    print "going"
     if driving_forward:
       # BEGIN FORWARD
       if (g_range_ahead < 0.8 or rospy.Time.now() > state_change_time):
@@ -55,7 +62,34 @@ while not rospy.is_shutdown():
     cmd_vel_pub.publish(twist)
   else: # if not go
     cmd_vel_pub.publish(Twist())
-  
+
+  print "Range ahead: " + str(g_range_ahead)
+
+  rate.sleep()
+"""
+
+while not rospy.is_shutdown():
+  if go:
+
+    if (g_range_ahead < 0.9):
+      driving_forward = False
+    else:
+      driving_forward = True 
+
+    twist = Twist()
+    #change liner.x to 0.8 for maximum speed
+    if driving_forward:
+      twist.linear.x = 0.6
+      twist.angular.z = 0.0
+    else:
+      twist.angular.z = 3.0
+      twist.linear.x = 0.0
+
+    cmd_vel_pub.publish(twist)
+
+  else: # if not go
+    cmd_vel_pub.publish(Twist())
+
   print "Range ahead: " + str(g_range_ahead)
 
   rate.sleep()
