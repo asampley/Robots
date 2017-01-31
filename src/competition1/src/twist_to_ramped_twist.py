@@ -9,7 +9,7 @@ g_twist_pub = None
 g_target_twist = None 
 g_last_twist = None
 g_last_send_time = None
-g_vel_scales = [0.1, 0.1] # default to very slow 
+#g_vel_scales = [0.1, 0.1] # default to very slow 
 g_vel_ramps = [1, 1] # units: meters per second^2
 
 # BEGIN RAMP
@@ -40,7 +40,8 @@ def ramped_twist(prev, target, t_prev, t_now, ramps):
 
 def send_twist():
   global g_last_twist_send_time, g_target_twist, g_last_twist,\
-         g_vel_scales, g_vel_ramps, g_twist_pub
+         #g_vel_scales, 
+         g_vel_ramps, g_twist_pub
   t_now = rospy.Time.now()
   g_last_twist = ramped_twist(g_last_twist, g_target_twist,
                               g_last_twist_send_time, t_now, g_vel_ramps)
@@ -61,8 +62,8 @@ if __name__ == '__main__':
   rospy.Subscriber('twist_in', Twist, twist_sub)
   g_target_twist = Twist() # initializes to zero
   g_last_twist = Twist()
-  g_vel_scales[0] = fetch_param('~angular_scale', 0.5)
-  g_vel_scales[1] = fetch_param('~linear_scale', 0.1)
+#  g_vel_scales[0] = fetch_param('~angular_scale', 0.5)
+#  g_vel_scales[1] = fetch_param('~linear_scale', 0.1)
   g_vel_ramps[0] = fetch_param('~angular_accel', 1.0)
   g_vel_ramps[1] = fetch_param('~linear_accel', 1.0)
 
@@ -71,7 +72,7 @@ if __name__ == '__main__':
     send_twist()
     rate.sleep()
   
-    print "Vel: " + str(g_target_twist.linear.x)
-    print "Ang: " + str(g_target_twist.angular.z)
+#    print "Vel: " + str(g_target_twist.linear.x)
+#    print "Ang: " + str(g_target_twist.angular.z)
 
 # END ALL
