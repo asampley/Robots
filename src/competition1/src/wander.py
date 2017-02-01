@@ -12,13 +12,15 @@ def scan_callback(msg):
 
   angle_capture = 0.65 # in radians
 
-  range_min_i = (int)(math.floor((-msg.angle_min - (angle_capture / 2)) / msg.angle_increment))
-  range_max_i = (int)(math.floor((msg.angle_max - (angle_capture / 2)) / msg.angle_increment))
+  range_min_i = (int)(math.floor((-(msg.angle_min) - (angle_capture / 2)) / msg.angle_increment))
+  range_max_i = len(msg.ranges) - (int)(math.floor((msg.angle_max - (angle_capture / 2)) / msg.angle_increment))
+  
+  print "Trim from " + str(range_min_i) + " to " + str(range_max_i)
   
   ranges = msg.ranges[range_min_i:range_max_i]
   ranges = [x for x in ranges if not math.isnan(x)]
 
-  print "Data: " + str(ranges)
+#  print "Data: " + str(ranges)
 
   #print "ahhhh!"
 
