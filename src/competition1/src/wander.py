@@ -10,9 +10,15 @@ from sensor_msgs.msg import Joy
 def scan_callback(msg):
   global g_range_ahead
 
-  ranges = [x for x in msg.ranges if not math.isnan(x)]
+  angle_capture = 0.65 # in radians
 
-  #print "Data: " + str(ranges)
+  range_min_i = (int)(math.floor((-msg.angle_min - (angle_capture / 2)) / msg.angle_increment))
+  range_max_i = (int)(math.floor((msg.angle_max - (angle_capture / 2)) / msg.angle_increment))
+  
+  ranges = msg.ranges[range_min_i:range_max_i]
+  ranges = [x for x in ranges if not math.isnan(x)]
+
+  print "Data: " + str(ranges)
 
   #print "ahhhh!"
 
@@ -85,7 +91,7 @@ while not rospy.is_shutdown():
     twist = Twist()
     #change liner.x to 0.8 for maximum speed
     if driving_forward:
-      twist.linear.x = 0.6
+      twist.linear.x = 2.0
       twist.angular.z = 0.0
     else:
       twist.angular.z = turn_dir * 3.0

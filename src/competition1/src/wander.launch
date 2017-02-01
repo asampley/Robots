@@ -4,13 +4,15 @@
 	
 	<node name="depthimage_to_laserscan" pkg="depthimage_to_laserscan" type="depthimage_to_laserscan">
 		<remap from="image" to="camera/depth/image_rect"/>
+		<param name="scan_height" value="200"/>
 	</node>
 
 	<node pkg="competition1" type="twist_to_ramped_twist.py" name="twist_to_ramped">
 		<remap from="twist_out" to="cmd_vel_mux/input/teleop"/>
+		<param name="~linear_accel" value="4.0"/>
 		<param name="~angular_accel" value="10.0"/>
 	</node>
-	<node pkg="competition1" type="wander.py" name="wander">
+	<node pkg="competition1" type="wander.py" name="wander" output="screen">
 		<remap from="cmd_vel" to="twist_in"/>
 	</node>
 
