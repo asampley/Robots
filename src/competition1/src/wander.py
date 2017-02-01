@@ -75,12 +75,12 @@ while not rospy.is_shutdown():
 
     if (g_range_ahead < 0.9):
       driving_forward = False
+    else:
+      driving_forward = True 
       if randint(0, 1) == 0:
         turn_dir = 1
       else:
         turn_dir = -1
-    else:
-      driving_forward = True 
 
     twist = Twist()
     #change liner.x to 0.8 for maximum speed
