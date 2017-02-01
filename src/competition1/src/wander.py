@@ -10,22 +10,28 @@ from sensor_msgs.msg import Joy
 def scan_callback(msg):
   global g_range_ahead
 
-  angle_capture = 0.65 # in radians
+  angle_capture = 0.80 # in radians
 
   range_min_i = (int)(math.floor((-(msg.angle_min) - (angle_capture / 2)) / msg.angle_increment))
   range_max_i = len(msg.ranges) - (int)(math.floor((msg.angle_max - (angle_capture / 2)) / msg.angle_increment))
   
-  print "Trim from " + str(range_min_i) + " to " + str(range_max_i)
+  #print "Trim from " + str(range_min_i) + " to " + str(range_max_i)
   
   ranges = msg.ranges[range_min_i:range_max_i]
-  ranges = [x for x in ranges if not math.isnan(x)]
+  nanCount = 0;
+  for x in ranges:
+    if math.isnan(x):
+      nanCount = nanCount +1
 
-#  print "Data: " + str(ranges)
 
-  #print "ahhhh!"
+  #print "Nans:" + str(nanCount);
+  #print "Data: " + str(ranges)
+
 
   if(ranges):
     g_range_ahead = min(ranges)
+    if(nanCount > 30):
+      g_range_ahead = 0.0;
 
 def joy_callback(msg):
   global go
@@ -93,10 +99,10 @@ while not rospy.is_shutdown():
     twist = Twist()
     #change liner.x to 0.8 for maximum speed
     if driving_forward:
-      twist.linear.x = 2.0
+      twist.linear.x = 1.3
       twist.angular.z = 0.0
     else:
-      twist.angular.z = turn_dir * 3.0
+      twist.angular.z = turn_dir * 3.5
       twist.linear.x = 0.0
 
     cmd_vel_pub.publish(twist)
@@ -104,7 +110,7 @@ while not rospy.is_shutdown():
   else: # if not go
     cmd_vel_pub.publish(Twist())
 
-  print "Range ahead: " + str(g_range_ahead)
+  #print "Range ahead: " + str(g_range_ahead)
 
   rate.sleep()
 # END ALL
