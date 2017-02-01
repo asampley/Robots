@@ -3,6 +3,11 @@
 	<include file="$(find turtlebot_bringup)/launch/minimal.launch"/>
 	<include file="$(find openni2_launch)/launch/openni2.launch"/>
 
+	<node pkg="depthimage_to_laserscan" type="depthimage_to_laserscan" name="depthimage_to_laserscan">
+		<remap from="image" to="camera/depth/image_rect"/>
+		<param name="scan_height" value="200"/>
+	</node>
+
 	<node pkg="competition1" type="laser_point_publisher_front.py" name="laser_point_publisher_front">
 		<remap from="point_follower/point" to="point_follower/point"/>
 		<remap from="scan" to="scan"/>
@@ -10,11 +15,18 @@
 
 	<node pkg="competition1" type="point_follower_front.py" name="point_follower_front">
 		<remap from="point_follower/point" to="point_follower/point"/>
-		<remap from="cmd_vel" to="twist_in"/>
+		<remap from="cmd_vel" to="ramp_twist_in"/>
 	</node>
 
 	<node pkg="competition1" type="twist_to_ramped_twist.py" name="twist_to_ramped_twist">
-		<remap from="twist_in" to="twist_in"/>
+		<remap from="twist_in" to="ramp_twist_in"/>
+		<remap from="twist_out" to="x_death_twist_in"/>
+	</node>
+
+	<node pkg="competition1" type="x_is_death.py" name="x_is_death">
+		<remap from="twist_in" to="x_death_twist_in"/>
 		<remap from="twist_out" to="cmd_vel_mux/input/teleop"/>
 	</node>
+
+	<node pkg="joy" type="joy_node" name="joy"/>
 </launch>
