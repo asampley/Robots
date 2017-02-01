@@ -33,7 +33,7 @@ def publish_state():
     pub_vel = rospy.Publisher('/cmd_vel',Twist, queue_size=1)
 
     rospy.init_node('point_follower_front', anonymous=True)
-    r = rospy.Rate(20)
+    rate = rospy.Rate(20)
 
     cmd = Twist()
     node_init_flag = 1
@@ -62,8 +62,8 @@ def publish_state():
 
             dmax =   5.5
             dmin =   0.6
-            amax =   0.6
-            amin = - 0.6
+            amax =   1.0
+            amin = - 1.0
             point_inside_limits = 0
             if d > dmin and d < dmax and a > amin and a < amax:
                 point_inside_limits = 1
@@ -74,7 +74,7 @@ def publish_state():
 
             if point_inside_limits:
                 #print d, a
-                dr = 1.0
+                dr = 0.8
                 ar = 0.00
 
                 # Linear velocity:
@@ -83,7 +83,7 @@ def publish_state():
                 KDd = 0.0
 
                 ed = float(dr - d)
-                #print ed
+                print ed
                 ed_delta = (ed - ed_old)/float(0.05)
                 ed_old = ed
 
@@ -130,7 +130,7 @@ def publish_state():
         cmd.angular.z = wr
         pub_vel.publish(cmd)
 
-        r.sleep()
+        rate.sleep()
 
 if __name__ == "__main__": 
     publish_state()
