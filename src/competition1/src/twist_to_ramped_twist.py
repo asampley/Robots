@@ -8,8 +8,7 @@ from geometry_msgs.msg import Twist
 g_twist_pub = None
 g_target_twist = None 
 g_last_twist = None
-g_last_send_time = None
-#g_vel_scales = [0.1, 0.1] # default to very slow 
+g_last_send_time = None 
 g_vel_ramps = [1, 1] # units: meters per second^2
 
 # BEGIN RAMP
@@ -40,7 +39,6 @@ def ramped_twist(prev, target, t_prev, t_now, ramps):
 
 def send_twist():
   global g_last_twist_send_time, g_target_twist, g_last_twist,\
-         #g_vel_scales, 
          g_vel_ramps, g_twist_pub
   t_now = rospy.Time.now()
   g_last_twist = ramped_twist(g_last_twist, g_target_twist,

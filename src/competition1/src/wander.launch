@@ -8,7 +8,7 @@
 
 	<node pkg="competition1" type="twist_to_ramped_twist.py" name="twist_to_ramped">
 		<remap from="twist_out" to="cmd_vel_mux/input/teleop"/>
-		<param name="~angular_accel" value="5.0"/>
+		<param name="~angular_accel" value="10.0"/>
 	</node>
 	<node pkg="competition1" type="wander.py" name="wander">
 		<remap from="cmd_vel" to="twist_in"/>

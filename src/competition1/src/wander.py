@@ -2,6 +2,7 @@
 # BEGIN ALL
 import rospy
 import math
+from random import randint
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
 from sensor_msgs.msg import Joy
@@ -36,6 +37,7 @@ rospy.init_node('wander')
 state_change_time = rospy.Time.now()
 driving_forward = True
 rate = rospy.Rate(10)
+turn_dir = 1
 
 """
 while not rospy.is_shutdown():
@@ -73,6 +75,10 @@ while not rospy.is_shutdown():
 
     if (g_range_ahead < 0.9):
       driving_forward = False
+      if randint(0, 1) == 0:
+        turn_dir = 1
+      else:
+        turn_dir = -1
     else:
       driving_forward = True 
 
@@ -82,7 +88,7 @@ while not rospy.is_shutdown():
       twist.linear.x = 0.6
       twist.angular.z = 0.0
     else:
-      twist.angular.z = 3.0
+      twist.angular.z = turn_dir * 3.0
       twist.linear.x = 0.0
 
     cmd_vel_pub.publish(twist)
