@@ -9,8 +9,10 @@ from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Point
     
 scan_data = LaserScan()
-prev_x = None
-prev_y = None
+prev_x1 = None
+prev_y1 = None
+prev_x2 = None
+prev_y2 = None
 
 def update_scan(data):
     global scan_data
@@ -19,7 +21,7 @@ def update_scan(data):
 
 def publish_state():
 
-    global scan_data, prev_x, prev_y
+    global scan_data, prev_x1, prev_x2, prev_y1, prev_y2
 
     rospy.Subscriber('/scan',LaserScan,update_scan)
 
@@ -59,8 +61,13 @@ def publish_state():
             dy =  r * numpy.sin(a)
 
             # heuristic for near to previous point
-            if prev_x and prev_y:
-              h = math.pow(dx - prev_x, 2) + math.pow(dy - prev_y, 2)
+            if prev_x1 and prev_y1 and prev_x2 and prev_y2:
+              curr_vel_x = dx - prev_x1
+              curr_vel_y = dy - prev_y1
+              prev_vel_x = prev_x1 - prev_x2
+              prev_vel_y = prev_y1 - prev_y2
+
+              h = math.pow(curr_vel_x - prev_vel_x, 2) + math.pow(curr_vel_y - prev_vel_y, 2)
             else:
               h = 0
             
@@ -75,8 +82,11 @@ def publish_state():
             dx = bestr * numpy.cos(besta)
             dy = bestr * numpy.sin(besta)
 
-            prev_x = dx
-            prev_y = dy
+            prev_x2 = prev_x1
+            prev_y2 = prev_y1
+
+            prev_x1 = dx
+            prev_y1 = dy
 
             print "Best (r, a, h) : (" + str(bestr) + ", " + str(besta) + ", " + str(besth) + ")"
 
