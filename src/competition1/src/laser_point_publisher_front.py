@@ -19,7 +19,7 @@ def update_scan(data):
 
 def publish_state():
 
-    global scan_data
+    global scan_data, prev_x, prev_y
 
     rospy.Subscriber('/scan',LaserScan,update_scan)
 
