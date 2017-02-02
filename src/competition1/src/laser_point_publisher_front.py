@@ -9,10 +9,20 @@ from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Point
     
 scan_data = LaserScan()
-prev_x1 = None
-prev_y1 = None
-prev_x2 = None
-prev_y2 = None
+
+point_list = []
+num_points = 10
+point_decay = 0.9
+
+class Point2D:
+  def __init__(self, x=0, y=0):
+    self.x = x
+    self.y = y
+  
+  def dist(self, otherPoint):
+    dx = self.x - otherPoint.x
+    dy = self.y - otherPoint.y
+    return math.sqrt(dx * dx + dy * dy)
 
 def update_scan(data):
     global scan_data
@@ -21,7 +31,7 @@ def update_scan(data):
 
 def publish_state():
 
-    global scan_data, prev_x1, prev_x2, prev_y1, prev_y2
+    global scan_data, prev_points, num_points, point_decay
 
     rospy.Subscriber('/scan',LaserScan,update_scan)
 
@@ -60,14 +70,13 @@ def publish_state():
             dx =  r * numpy.cos(a)
             dy =  r * numpy.sin(a)
 
-            # heuristic for near to previous point
-            if prev_x1 and prev_y1 and prev_x2 and prev_y2:
-              curr_vel_x = dx - prev_x1
-              curr_vel_y = dy - prev_y1
-              prev_vel_x = prev_x1 - prev_x2
-              prev_vel_y = prev_y1 - prev_y2
+            curr_point = Point2D(dx, dy)
 
-              h = math.pow(curr_vel_x - prev_vel_x, 2) + math.pow(curr_vel_y - prev_vel_y, 2)
+            # heuristic for near to previous points
+            if point_list:
+              h = 0
+              for li in range(0, len(point_list)):
+                h += math.pow(point_decay, li) * point_list[li].dist(curr_point)
             else:
               h = 0
             
@@ -82,11 +91,9 @@ def publish_state():
             dx = bestr * numpy.cos(besta)
             dy = bestr * numpy.sin(besta)
 
-            prev_x2 = prev_x1
-            prev_y2 = prev_y1
-
-            prev_x1 = dx
-            prev_y1 = dy
+            if len(point_list) == num_points:
+              point_list.pop()
+            point_list.insert(0, Point2D(dx, dy))
 
             print "Best (r, a, h) : (" + str(bestr) + ", " + str(besta) + ", " + str(besth) + ")"
 
