@@ -12,7 +12,7 @@ scan_data = LaserScan()
 
 point_list = []
 num_points = 10
-point_decay = 0.9
+point_decay = 0.5
 
 class Point2D:
   def __init__(self, x=0, y=0):
