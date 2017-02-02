@@ -98,7 +98,7 @@ def publish_state():
             print "Best (r, a, h) : (" + str(bestr) + ", " + str(besta) + ", " + str(besth) + ")"
 
             x_offset = 0.0
-            y_offset = -0.19 #0.19
+            y_offset = 0.0
 
             point.x = dx + x_offset
             point.y = dy + y_offset
