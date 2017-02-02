@@ -5,12 +5,14 @@ import numpy
 import math
 from std_msgs.msg import UInt16
 from sensor_msgs.msg import LaserScan
+from sensor_msgs.msg import Joy
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Point
     
 scan_data = LaserScan()
 
 point_list = []
+clear_list = False
 num_points = 10
 point_decay = 0.5
 
@@ -27,13 +29,20 @@ class Point2D:
 def update_scan(data):
     global scan_data
     scan_data = data
+
+def joy_callback(msg):
+    global clear_list
+    
+    if msg.buttons[2] == 1:
+      clear_list = True
 #-----------------------------------------
 
 def publish_state():
 
-    global scan_data, prev_points, num_points, point_decay
+    global scan_data, prev_points, num_points, point_decay, point_list, clear_list
 
     rospy.Subscriber('/scan',LaserScan,update_scan)
+    rospy.Subscriber('/joy', Joy, joy_callback)
 
     pub = rospy.Publisher('/point_follower/point',Point, queue_size=1)
 
@@ -43,6 +52,9 @@ def publish_state():
     point = Point()
 
     while not rospy.is_shutdown():
+        if clear_list:
+          point_list = []
+          clear_list = False
 
         #print scan_data.ranges[0]
         a_min = scan_data.angle_min
