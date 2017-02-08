@@ -25,17 +25,18 @@ class Follower:
       rospy.get_param("~upper_hsv/s", 255),\
       rospy.get_param("~upper_hsv/v", 255)])
 
+    self.prev_err = 0
+
   def image_callback(self, msg):
     image = self.bridge.imgmsg_to_cv2(msg,desired_encoding='bgr8')
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     mask = cv2.inRange(hsv, self.lower_hsv, self.upper_hsv)
     cv2.imshow("raw_mask", mask)
 
-    e_kernel = numpy.ones((3,3), numpy.uint8)
+    e_kernel = numpy.ones((5,5), numpy.uint8)
     d_kernel = numpy.ones((3,3), numpy.uint8)
     mask = cv2.dilate(mask, d_kernel, iterations=1)
-    mask = cv2.erode(mask, e_kernel, iterations=2)
-    mask = cv2.dilate(mask, d_kernel, iterations=1)
+    mask = cv2.erode(mask, e_kernel, iterations=1)
     cv2.imshow("refined_mask", mask)
     
     h, w, d = image.shape
@@ -50,10 +51,17 @@ class Follower:
       cv2.circle(image, (cx, cy), 20, (0,0,255), -1)
       # BEGIN CONTROL
       err = cx - w/2
-      self.twist.linear.x = 0.2
-      self.twist.angular.z = -float(err) / 100
+      derr = err - self.prev_err
+      kp = 0.01
+      kd = 0.01
+      self.twist.linear.x = 0.5
+      self.twist.angular.z = -float(err) * kp + float(derr) * kd
       self.cmd_vel_pub.publish(self.twist)
+
+      self.prev_err = err
       # END CONTROL
+    else:
+      self.cmd_vel_pub.publish(Twist())
     cv2.imshow("window", image)
     cv2.waitKey(3)
 
