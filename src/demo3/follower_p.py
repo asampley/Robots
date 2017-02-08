@@ -15,12 +15,20 @@ class Follower:
     self.cmd_vel_pub = rospy.Publisher('cmd_vel_mux/input/teleop',
                                        Twist, queue_size=1)
     self.twist = Twist()
+
+    self.lower_hsv = numpy.array([\
+      rospy.get_param("~lower_hsv/h", 110),\
+      rospy.get_param("~lower_hsv/s", 100),\
+      rospy.get_param("~lower_hsv/v", 100)])
+    self.upper_hsv = numpy.array([\
+      rospy.get_param("~upper_hsv/h", 130),\
+      rospy.get_param("~upper_hsv/s", 255),\
+      rospy.get_param("~upper_hsv/v", 255)])
+
   def image_callback(self, msg):
     image = self.bridge.imgmsg_to_cv2(msg,desired_encoding='bgr8')
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    lower_yellow = numpy.array([110, 100, 100])
-    upper_yellow = numpy.array([130, 255, 255])
-    mask = cv2.inRange(hsv, lower_yellow, upper_yellow)
+    mask = cv2.inRange(hsv, self.lower_hsv, self.upper_hsv)
     cv2.imshow("raw_mask", mask)
 
     e_kernel = numpy.ones((3,3), numpy.uint8)
