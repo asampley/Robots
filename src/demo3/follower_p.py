@@ -10,6 +10,7 @@ class Follower:
     cv2.namedWindow("window", 1)
     cv2.namedWindow("raw_mask", 1)
     cv2.namedWindow("refined_mask", 1)
+    cv2.namedWindow("light_mask", 1)
     self.image_sub = rospy.Subscriber('camera/rgb/image_raw', 
                                       Image, self.image_callback)
     self.cmd_vel_pub = rospy.Publisher('cmd_vel_mux/input/teleop',
@@ -24,12 +25,37 @@ class Follower:
       rospy.get_param("~upper_hsv/h", 130),\
       rospy.get_param("~upper_hsv/s", 255),\
       rospy.get_param("~upper_hsv/v", 255)])
+    
+    self.light1_lower_hsv = numpy.array([\
+      rospy.get_param("~light1/lower_hsv/h", 0),\
+      rospy.get_param("~light1/lower_hsv/s", 200),\
+      rospy.get_param("~light1/lower_hsv/v", 200)])
+    self.light1_upper_hsv = numpy.array([\
+      rospy.get_param("~light1/upper_hsv/h", 10),\
+      rospy.get_param("~light1/upper_hsv/s", 255),\
+      rospy.get_param("~light1/upper_hsv/v", 255)])
+    self.light2_lower_hsv = numpy.array([\
+      rospy.get_param("~light2/lower_hsv/h", 160),\
+      rospy.get_param("~light2/lower_hsv/s", 200),\
+      rospy.get_param("~light2/lower_hsv/v", 200)])
+    self.light2_upper_hsv = numpy.array([\
+      rospy.get_param("~light2/upper_hsv/h", 179),\
+      rospy.get_param("~light2/upper_hsv/s", 255),\
+      rospy.get_param("~light2/upper_hsv/v", 255)])
+
 
     self.prev_err = 0
 
   def image_callback(self, msg):
     image = self.bridge.imgmsg_to_cv2(msg,desired_encoding='bgr8')
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+    # find light
+    light_mask = cv2.inRange(hsv, self.light1_lower_hsv, self.light1_upper_hsv)
+    light_mask = numpy.maximum(light_mask, cv2.inRange(hsv, self.light2_lower_hsv, self.light2_upper_hsv))
+    cv2.imshow("light_mask", light_mask)
+
+    # find line
     mask = cv2.inRange(hsv, self.lower_hsv, self.upper_hsv)
     cv2.imshow("raw_mask", mask)
 
