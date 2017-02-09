@@ -72,7 +72,9 @@ class Follower:
       if self.red_light:
         print("Green Light!!!")
       self.red_light = False
-
+	
+    #debug
+    #self.red_light = False
 
     # find line
     mask = cv2.inRange(hsv, self.lower_hsv, self.upper_hsv)
@@ -99,7 +101,7 @@ class Follower:
       cy = int(M['m01']/M['m00'])
       cv2.circle(image, (cx, cy), 20, (0,0,255), -1)
       # BEGIN CONTROL
-      err = cx - w/2
+      err = cx - w/1.5
       derr = err - self.prev_err
       kp = 0.01
       kd = 0.01
