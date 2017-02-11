@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>demo3</name>
+  <name>competition2</name>
   <version>0.0.0</version>
   <description>The followbot package</description>
   <maintainer email="morgan@osrfoundation.org">Morgan Quigley</maintainer>
