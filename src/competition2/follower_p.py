@@ -32,11 +32,11 @@ class Follower:
 
     #yellow lines
     self.yellow_lower_hsv = numpy.array([\
-      rospy.get_param("~yellow_lower_hsv/h", 0),\
-      rospy.get_param("~yellow_lower_hsv/s", 100),\
+      rospy.get_param("~yellow_lower_hsv/h", 10),\
+      rospy.get_param("~yellow_lower_hsv/s", 50),\
       rospy.get_param("~yellow_lower_hsv/v", 100)])
     self.yellow_upper_hsv = numpy.array([\
-      rospy.get_param("~yellow_upper_hsv/h", 10),\
+      rospy.get_param("~yellow_upper_hsv/h", 30),\
       rospy.get_param("~yellow_upper_hsv/s", 255),\
       rospy.get_param("~yellow_upper_hsv/v", 255)])
     
