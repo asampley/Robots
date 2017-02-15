@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # BEGIN ALL
-import rospy, cv2, cv_bridge, numpy
+import rospy, cv2, cv_bridge, numpy, math
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Twist
 
@@ -167,13 +167,18 @@ class Follower:
 
       yellow_derr = yellow_err - self.yellow_prev_err
       
+
+      dist = math.sqrt((yellow_cx - white_cx)**2 + (yellow_cy - white_cy)**2)
       err = white_err + yellow_err
       derr = white_derr + yellow_derr
 
+
+      
       self.twist.angular.z = -float(err) * kp + float(derr) * kd
-      
-      self.twist.linear.x = 0.1
-      
+      if(dist > 0.3)
+        self.twist.linear.x = 0.8
+      else:
+        self.twist.linear.x = 0.3
       print(self.twist.angular.z)      
 
       self.cmd_vel_pub.publish(self.twist)
