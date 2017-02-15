@@ -1,0 +1,13 @@
+<launch>
+	<include file="$(find demo3)/course.launch"/>
+	
+	<node pkg="demo3" type="follower_p.py" name="follower" output="screen">
+		<!--remap from="cmd_vel_mux/input/teleop" to="twist_x_in"/-->
+		<param name="~lower_hsv/h" type="int" value="10"/>
+		<param name="~lower_hsv/s" type="int" value="10"/>
+		<param name="~lower_hsv/v" type="int" value="10"/>
+		<param name="~upper_hsv/h" type="int" value="179"/>
+		<param name="~upper_hsv/s" type="int" value="255"/>
+		<param name="~upper_hsv/v" type="int" value="255"/>
+	</node>
+</launch>

@@ -103,47 +103,41 @@ class Follower:
     #mask2[0:h, 0:w] = 0
     #cv2.circle(mask2, (w/2, h-75), 20, (40,0,255), -1)
 
-    circle_img = numpy.zeros((h,w), numpy.uint8)
-    cv2.circle(circle_img,(w/2,h-70),50,1,thickness=-1)
-    mask2 = cv2.bitwise_and(mask,mask,mask=circle_img)
+    #circle_img = numpy.zeros((h,w), numpy.uint8)
+    #cv2.circle(circle_img,(w/2,h-70),50,1,thickness=-1)
+    #mask2 = cv2.bitwise_and(mask,mask,mask=circle_img)
 
-    cv2.imshow("thomas_trimmed_mask", mask2)
-    line_pixels = cv2.findNonZero(mask2)
+    #cv2.imshow("thomas_trimmed_mask", mask2)
+    #line_pixels = cv2.findNonZero(mask2)
     #print str(line_pixels)
-    isLine = False
-    if (line_pixels != None):
+    #isLine = False
+    #if (line_pixels != None):
       #print str(line_pixels[0][0][0])
-      isLine = True
+      #isLine = True
 
     M = cv2.moments(mask)
-    if not self.red_light:
-      #cx = int(M['m10']/M['m00'])
-      #cy = int(M['m01']/M['m00'])
-      #cv2.circle(image, (cx, cy), 20, (0,0,255), -1)
+    if M['m00'] > 0 and not self.red_light:
+      cx = int(M['m10']/M['m00'])
+      cy = int(M['m01']/M['m00'])
+      cv2.circle(image, (cx, cy), 20, (0,0,255), -1)
       #cx = w/2
       #cy = h - 75
       #cv2.circle(image, (cx, cy), 20, (40,0,255), -1)
       # BEGIN CONTROL
-      #err = cx - w/2.0
-      #derr = err - self.prev_err
+      err = cx - float(w) * 0.75
+      derr = err - self.prev_err
+      #print(str(err))
+
       kp = 0.01
       kd = 0.01
-      #self.twist.linear.x = 0.5
-      #self.twist.angular.z = -float(err) * kp + float(derr) * kd
-
+      self.twist.linear.x = 0.2
+      self.twist.angular.z = -float(err) * kp + float(derr) * kd
       
-      if (isLine):
-        self.twist.angular.z = 0.2
-        self.twist.linear.x = 0.0
-      else:
-        1+1
-        self.twist.linear.x = 0.2
-        self.twist.angular.z = 0.0
-      
+      print(self.twist.angular.z)      
 
       self.cmd_vel_pub.publish(self.twist)
 
-      #self.prev_err = err
+      self.prev_err = err
       # END CONTROL
     else:
       self.cmd_vel_pub.publish(Twist())
