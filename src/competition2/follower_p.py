@@ -6,11 +6,13 @@ from geometry_msgs.msg import Twist
 
 class Follower:
   def __init__(self):
+    self.min_pixels_for_line = 200000
+
     self.bridge = cv_bridge.CvBridge()
     cv2.namedWindow("window", 1)
     #cv2.namedWindow("raw_mask", 1)
-    cv2.namedWindow("white_refined_mask", 1)
-    cv2.namedWindow("yellow_refined_mask", 1)
+    #cv2.namedWindow("white_refined_mask", 1)
+    #cv2.namedWindow("yellow_refined_mask", 1)
     cv2.namedWindow("light_mask", 1)
     cv2.namedWindow("white_trimmed_mask", 1)
     cv2.namedWindow("yellow_trimmed_mask", 1)
@@ -100,7 +102,7 @@ class Follower:
     d_kernel = numpy.ones((3,3), numpy.uint8)
     white_mask = cv2.dilate(white_mask, d_kernel, iterations=1)
     white_mask = cv2.erode(white_mask, e_kernel, iterations=1)
-    cv2.imshow("white_refined_mask", white_mask)
+    #cv2.imshow("white_refined_mask", white_mask)
     
     h, w, d = image.shape
     search_top = int(float(h) * self.line_search_top)
@@ -119,7 +121,7 @@ class Follower:
     d_kernel = numpy.ones((3,3), numpy.uint8)
     yellow_mask = cv2.dilate(yellow_mask, d_kernel, iterations=1)
     yellow_mask = cv2.erode(yellow_mask, e_kernel, iterations=1)
-    cv2.imshow("yellow_refined_mask", yellow_mask)
+    #cv2.imshow("yellow_refined_mask", yellow_mask)
     
     h, w, d = image.shape
     search_top = int(float(h) * self.line_search_top)
@@ -132,30 +134,44 @@ class Follower:
 
     whiteM = cv2.moments(white_mask)
     yellowM = cv2.moments(yellow_mask)
-    if ((whiteM['m00'] > 0) or (yellowM['m00'] > 0) )  and not self.red_light:
+    if ((whiteM['m00'] > self.min_pixels_for_line) or (yellowM['m00'] > self.min_pixels_for_line) )  and not self.red_light:
+    
 
       kp = 0.01
       kd = 0.01
       white_err = 0
       yellow_err = 0
-	
-      if(whiteM['m00'] != 0):
+
+      print('white: ' + str(whiteM['m00']))	
+      print('yellow: ' + str(yellowM['m00']))
+      
+      if(whiteM['m00'] > self.min_pixels_for_line):
         white_cx = int(whiteM['m10']/whiteM['m00'])
         white_cy = int(whiteM['m01']/whiteM['m00'])
         cv2.circle(image, (white_cx, white_cy), 20, (0,0,180), -1)
         white_err = white_cx - float(w) * 0.75
-        white_derr = white_err - self.white_prev_err
-        self.twist.angular.z = -float(white_err) * kp + float(white_derr) * kd
+      else:
+        # if we can't see the white line, pretend it is on the far side
+        white_err = float(w) - float(w) * 0.75
+      
+      white_derr = white_err - self.white_prev_err
 
-      if(yellowM['m00'] != 0):
+      if(yellowM['m00'] > self.min_pixels_for_line):
         yellow_cx = int(yellowM['m10']/yellowM['m00'])
         yellow_cy = int(yellowM['m01']/yellowM['m00'])
         cv2.circle(image, (yellow_cx, yellow_cy), 20, (0,90,180), -1)
         yellow_err = yellow_cx - float(w) * 0.25
-        yellow_derr = yellow_err - self.yellow_prev_err
-        self.twist.angular.z = -float(yellow_err) * kp + float(yellow_derr) * kd
+      else:
+        # if we can't see the yellow line, pretend it is on the far side
+        yellow_err = 0 - float(w) * 0.25
 
+      yellow_derr = yellow_err - self.yellow_prev_err
+      
+      err = white_err + yellow_err
+      derr = white_derr + yellow_derr
 
+      self.twist.angular.z = -float(err) * kp + float(derr) * kd
+      
       self.twist.linear.x = 0.1
       
       print(self.twist.angular.z)      
