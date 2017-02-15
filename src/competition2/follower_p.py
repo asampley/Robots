@@ -8,25 +8,39 @@ class Follower:
   def __init__(self):
     self.bridge = cv_bridge.CvBridge()
     cv2.namedWindow("window", 1)
-    cv2.namedWindow("raw_mask", 1)
-    cv2.namedWindow("refined_mask", 1)
+    #cv2.namedWindow("raw_mask", 1)
+    cv2.namedWindow("white_refined_mask", 1)
+    cv2.namedWindow("yellow_refined_mask", 1)
     cv2.namedWindow("light_mask", 1)
-    cv2.namedWindow("trimmed_mask", 1)
+    cv2.namedWindow("white_trimmed_mask", 1)
+    cv2.namedWindow("yellow_trimmed_mask", 1)
     self.image_sub = rospy.Subscriber('camera/rgb/image_raw', 
                                       Image, self.image_callback)
     self.cmd_vel_pub = rospy.Publisher('cmd_vel_mux/input/teleop',
                                        Twist, queue_size=1)
     self.twist = Twist()
 
+    #white lines
     self.lower_hsv = numpy.array([\
       rospy.get_param("~lower_hsv/h", 110),\
-      rospy.get_param("~lower_hsv/s", 100),\
-      rospy.get_param("~lower_hsv/v", 100)])
+      rospy.get_param("~lower_hsv/s", 50),\
+      rospy.get_param("~lower_hsv/v", 50)])
     self.upper_hsv = numpy.array([\
       rospy.get_param("~upper_hsv/h", 130),\
       rospy.get_param("~upper_hsv/s", 255),\
       rospy.get_param("~upper_hsv/v", 255)])
+
+    #yellow lines
+    self.yellow_lower_hsv = numpy.array([\
+      rospy.get_param("~yellow_lower_hsv/h", 0),\
+      rospy.get_param("~yellow_lower_hsv/s", 100),\
+      rospy.get_param("~yellow_lower_hsv/v", 100)])
+    self.yellow_upper_hsv = numpy.array([\
+      rospy.get_param("~yellow_upper_hsv/h", 10),\
+      rospy.get_param("~yellow_upper_hsv/s", 255),\
+      rospy.get_param("~yellow_upper_hsv/v", 255)])
     
+    #Red lines
     self.light1_lower_hsv = numpy.array([\
       rospy.get_param("~light1/lower_hsv/h", 0),\
       rospy.get_param("~light1/lower_hsv/s", 200),\
@@ -44,11 +58,13 @@ class Follower:
       rospy.get_param("~light2/upper_hsv/s", 255),\
       rospy.get_param("~light2/upper_hsv/v", 255)])
 
+
     self.line_search_bot = rospy.get_param("~line/search_bot_height_fraction", 1.0)
     self.line_search_top = rospy.get_param("~line/search_top_height_fraction", 0.75)
 
 
-    self.prev_err = 0
+    self.white_prev_err = 0
+    self.yellow_prev_err = 0
     self.red_light = False
 
   def image_callback(self, msg):
@@ -76,68 +92,78 @@ class Follower:
     #debug
     #self.red_light = False
 
-    # find line
-    mask = cv2.inRange(hsv, self.lower_hsv, self.upper_hsv)
-    cv2.imshow("raw_mask", mask)
+    # find white line
+    white_mask = cv2.inRange(hsv, self.lower_hsv, self.upper_hsv)
+    # cv2.imshow("raw_mask", mask)
 
     e_kernel = numpy.ones((5,5), numpy.uint8)
     d_kernel = numpy.ones((3,3), numpy.uint8)
-    mask = cv2.dilate(mask, d_kernel, iterations=1)
-    mask = cv2.erode(mask, e_kernel, iterations=1)
-    cv2.imshow("refined_mask", mask)
+    white_mask = cv2.dilate(white_mask, d_kernel, iterations=1)
+    white_mask = cv2.erode(white_mask, e_kernel, iterations=1)
+    cv2.imshow("white_refined_mask", white_mask)
     
     h, w, d = image.shape
     search_top = int(float(h) * self.line_search_top)
     search_bot = int(float(h) * self.line_search_bot)
 
-    mask[0:search_top, 0:w] = 0
-    mask[search_bot:h, 0:w] = 0
-    cv2.imshow("trimmed_mask", mask)
+    white_mask[0:search_top, 0:w] = 0
+    white_mask[search_bot:h, 0:w] = 0
+    cv2.imshow("white_trimmed_mask", white_mask)
 
-    #thomas code    
-    #mask2 = cv2.inRange(hsv, self.lower_hsv, self.upper_hsv)
-    #mask2[0:search_top, 0:w] = 0
-    #mask2[0:h, w-250:w] = 0
-    #mask2[0:h, 0:250] = 0
-    #mask2[0:250, 0:w] = 0
-    #mask2[0:h, 0:w] = 0
-    #cv2.circle(mask2, (w/2, h-75), 20, (40,0,255), -1)
 
-    #circle_img = numpy.zeros((h,w), numpy.uint8)
-    #cv2.circle(circle_img,(w/2,h-70),50,1,thickness=-1)
-    #mask2 = cv2.bitwise_and(mask,mask,mask=circle_img)
+    # find yellow line
+    yellow_mask = cv2.inRange(hsv, self.yellow_lower_hsv, self.yellow_upper_hsv)
+    # cv2.imshow("raw_mask", mask)
 
-    #cv2.imshow("thomas_trimmed_mask", mask2)
-    #line_pixels = cv2.findNonZero(mask2)
-    #print str(line_pixels)
-    #isLine = False
-    #if (line_pixels != None):
-      #print str(line_pixels[0][0][0])
-      #isLine = True
+    e_kernel = numpy.ones((5,5), numpy.uint8)
+    d_kernel = numpy.ones((3,3), numpy.uint8)
+    yellow_mask = cv2.dilate(yellow_mask, d_kernel, iterations=1)
+    yellow_mask = cv2.erode(yellow_mask, e_kernel, iterations=1)
+    cv2.imshow("yellow_refined_mask", yellow_mask)
+    
+    h, w, d = image.shape
+    search_top = int(float(h) * self.line_search_top)
+    search_bot = int(float(h) * self.line_search_bot)
 
-    M = cv2.moments(mask)
-    if M['m00'] > 0 and not self.red_light:
-      cx = int(M['m10']/M['m00'])
-      cy = int(M['m01']/M['m00'])
-      cv2.circle(image, (cx, cy), 20, (0,0,255), -1)
-      #cx = w/2
-      #cy = h - 75
-      #cv2.circle(image, (cx, cy), 20, (40,0,255), -1)
-      # BEGIN CONTROL
-      err = cx - float(w) * 0.75
-      derr = err - self.prev_err
-      #print(str(err))
+    yellow_mask[0:search_top, 0:w] = 0
+    yellow_mask[search_bot:h, 0:w] = 0
+    cv2.imshow("yellow_trimmed_mask", yellow_mask)
+
+
+    whiteM = cv2.moments(white_mask)
+    yellowM = cv2.moments(yellow_mask)
+    if ((whiteM['m00'] > 0) or (yellowM['m00'] > 0) )  and not self.red_light:
 
       kp = 0.01
       kd = 0.01
-      self.twist.linear.x = 0.2
-      self.twist.angular.z = -float(err) * kp + float(derr) * kd
+      white_err = 0
+      yellow_err = 0
+	
+      if(whiteM['m00'] != 0):
+        white_cx = int(whiteM['m10']/whiteM['m00'])
+        white_cy = int(whiteM['m01']/whiteM['m00'])
+        cv2.circle(image, (white_cx, white_cy), 20, (0,0,180), -1)
+        white_err = white_cx - float(w) * 0.75
+        white_derr = white_err - self.white_prev_err
+        self.twist.angular.z = -float(white_err) * kp + float(white_derr) * kd
+
+      if(yellowM['m00'] != 0):
+        yellow_cx = int(yellowM['m10']/yellowM['m00'])
+        yellow_cy = int(yellowM['m01']/yellowM['m00'])
+        cv2.circle(image, (yellow_cx, yellow_cy), 20, (0,90,180), -1)
+        yellow_err = yellow_cx - float(w) * 0.25
+        yellow_derr = yellow_err - self.yellow_prev_err
+        self.twist.angular.z = -float(yellow_err) * kp + float(yellow_derr) * kd
+
+
+      self.twist.linear.x = 0.1
       
       print(self.twist.angular.z)      
 
       self.cmd_vel_pub.publish(self.twist)
 
-      self.prev_err = err
+      self.white_prev_err = white_err
+      self.yellow_prev_err = yellow_err
       # END CONTROL
     else:
       self.cmd_vel_pub.publish(Twist())
