@@ -6,7 +6,7 @@ from geometry_msgs.msg import Twist
 
 class Follower:
   def __init__(self):
-    self.min_pixels_for_line = 200000
+    self.min_pixels_for_line = 100000
 
     self.bridge = cv_bridge.CvBridge()
     cv2.namedWindow("window", 1)
@@ -71,6 +71,9 @@ class Follower:
 
   def image_callback(self, msg):
     image = self.bridge.imgmsg_to_cv2(msg,desired_encoding='bgr8')
+    # blur to remove noise
+    image = cv2.medianBlur(image, 5)
+
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
     # find light
@@ -137,7 +140,7 @@ class Follower:
     if ((whiteM['m00'] > self.min_pixels_for_line) or (yellowM['m00'] > self.min_pixels_for_line) )  and not self.red_light:
     
 
-      kp = 0.01
+      kp = 0.005
       kd = 0.01
       white_err = 0
       yellow_err = 0
@@ -172,7 +175,7 @@ class Follower:
 
       self.twist.angular.z = -float(err) * kp + float(derr) * kd
       
-      self.twist.linear.x = 0.1
+      self.twist.linear.x = 0.3
       
       print(self.twist.angular.z)      
 
@@ -182,8 +185,9 @@ class Follower:
       self.yellow_prev_err = yellow_err
       # END CONTROL
     else:
-      self.cmd_vel_pub.publish(Twist())
+      self.cmd_vel_pub.publish(self.twist)
     cv2.imshow("window", image)
+    #cv2.imshow("window", hsv)
     cv2.waitKey(3)
 
 rospy.init_node('follower')
