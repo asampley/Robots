@@ -19,7 +19,8 @@ class Follower:
     lower_yellow = numpy.array([ 10,  10,  10])
     upper_yellow = numpy.array([255, 255, 250])
     mask = cv2.inRange(hsv, lower_yellow, upper_yellow)
-    
+
+
     h, w, d = image.shape
     search_top = 3*h/4
     search_bot = 3*h/4 + 20
@@ -31,9 +32,10 @@ class Follower:
       cy = int(M['m01']/M['m00'])
       cv2.circle(image, (cx, cy), 20, (0,0,255), -1)
       # BEGIN CONTROL
-      err = cx - w/2
-      self.twist.linear.x = 0.2
-      self.twist.angular.z = -float(err) / 100
+      #err = cx - (w/2+120)
+      err = cx - (w/2)
+      self.twist.linear.x = 0.8 #0.1-1.6
+      self.twist.angular.z = -float(err) / 400 #30-
       self.cmd_vel_pub.publish(self.twist)
       # END CONTROL
     cv2.imshow("window", image)

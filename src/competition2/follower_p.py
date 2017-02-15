@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # BEGIN ALL
-import rospy, cv2, cv_bridge, numpy
+import rospy, cv2, cv_bridge, numpy, math
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Twist
 
@@ -140,52 +140,59 @@ class Follower:
     if ((whiteM['m00'] > self.min_pixels_for_line) or (yellowM['m00'] > self.min_pixels_for_line) )  and not self.red_light:
     
 
-      kp = 0.005
+      kp = 0.01
       kd = 0.01
       white_err = 0
       yellow_err = 0
 
-      print('white: ' + str(whiteM['m00']))	
-      print('yellow: ' + str(yellowM['m00']))
+      #print('white: ' + str(whiteM['m00']))	
+      #print('yellow: ' + str(yellowM['m00']))
       
       if(whiteM['m00'] > self.min_pixels_for_line):
         white_cx = int(whiteM['m10']/whiteM['m00'])
         white_cy = int(whiteM['m01']/whiteM['m00'])
         cv2.circle(image, (white_cx, white_cy), 20, (0,0,180), -1)
-        white_err = white_cx - float(w) * 0.75
       else:
         # if we can't see the white line, pretend it is on the far side
-        white_err = float(w) - float(w) * 0.75
-      
+        white_cx = w
+        
+      white_err = white_cx - float(w) * 0.75
       white_derr = white_err - self.white_prev_err
 
       if(yellowM['m00'] > self.min_pixels_for_line):
         yellow_cx = int(yellowM['m10']/yellowM['m00'])
         yellow_cy = int(yellowM['m01']/yellowM['m00'])
         cv2.circle(image, (yellow_cx, yellow_cy), 20, (0,90,180), -1)
-        yellow_err = yellow_cx - float(w) * 0.25
       else:
         # if we can't see the yellow line, pretend it is on the far side
-        yellow_err = 0 - float(w) * 0.25
-
+        yellow_cx = 0
+        
+      yellow_err = yellow_cx - float(w) * 0.25
       yellow_derr = yellow_err - self.yellow_prev_err
       
+
+      dist = yellow_cx - white_cx
       err = white_err + yellow_err
       derr = white_derr + yellow_derr
 
+      
       self.twist.angular.z = -float(err) * kp + float(derr) * kd
-      
-      self.twist.linear.x = 0.3
-      
-      print(self.twist.angular.z)      
+      if(dist < w // 2):
+        self.twist.linear.x = 0.8
+      else:
+        self.twist.linear.x = 0.3
+      #print("linx: " + str(self.twist.linear.x))
+      #print("twistz" + str(self.twist.angular.z))
 
       self.cmd_vel_pub.publish(self.twist)
 
       self.white_prev_err = white_err
       self.yellow_prev_err = yellow_err
       # END CONTROL
-    else:
+    elif not self.red_light:
       self.cmd_vel_pub.publish(self.twist)
+    else:
+      self.cmd_vel_pub.publish(Twist())
     cv2.imshow("window", image)
     #cv2.imshow("window", hsv)
     cv2.waitKey(3)

@@ -26,6 +26,16 @@ class Follower:
       rospy.get_param("~upper_hsv/h", 130),\
       rospy.get_param("~upper_hsv/s", 255),\
       rospy.get_param("~upper_hsv/v", 255)])
+
+    self.wline_lower_hsv = numpy.array([\
+      rospy.get_param("~lower_hsv/h", 110),\
+      rospy.get_param("~lower_hsv/s", 100),\
+      rospy.get_param("~lower_hsv/v", 100)])
+    self._hsv = numpy.array([\
+      rospy.get_param("~upper_hsv/h", 130),\
+      rospy.get_param("~upper_hsv/s", 255),\
+      rospy.get_param("~upper_hsv/v", 255)])
+
     
     self.light1_lower_hsv = numpy.array([\
       rospy.get_param("~light1/lower_hsv/h", 0),\
@@ -96,15 +106,18 @@ class Follower:
     cv2.imshow("trimmed_mask", mask)
     
     M = cv2.moments(mask)
+
     if M['m00'] > 0 and not self.red_light:
-      cx = int(M['m10']/M['m00'])
+      cx = int(M['m10']/M['m00']) + 15
       cy = int(M['m01']/M['m00'])
       cv2.circle(image, (cx, cy), 20, (0,0,255), -1)
+
       # BEGIN CONTROL
       err = cx - w/2.0
       derr = err - self.prev_err
       kp = 0.01
       kd = 0.01
+
       #self.twist.linear.x = 0.5
       self.twist.linear.x = 0.2
       self.twist.angular.z = -float(err) * kp + float(derr) * kd
