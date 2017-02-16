@@ -118,55 +118,67 @@ class Follower:
     #debug
     self.red_light = False
 
-    # find white line
-    white_mask = cv2.inRange(hsv, self.lower_hsv, self.upper_hsv)
-    # cv2.imshow("raw_mask", mask)
+    found_lines = False
+    temp_white_lower_hsv = self.lower_hsv
+    temp_yellow_lower_hsv = self.yellow_lower_hsv
 
-    e_kernel = numpy.ones((5,5), numpy.uint8)
-    d_kernel = numpy.ones((3,3), numpy.uint8)
-    white_mask = cv2.dilate(white_mask, d_kernel, iterations=1)
-    white_mask = cv2.erode(white_mask, e_kernel, iterations=1)
-    #cv2.imshow("white_refined_mask", white_mask)
+    while not found_lines:
+      # find white line
+      white_mask = cv2.inRange(hsv, temp_white_lower_hsv, self.upper_hsv)
+      # cv2.imshow("raw_mask", mask)
+ 
+      e_kernel = numpy.ones((5,5), numpy.uint8)
+      d_kernel = numpy.ones((3,3), numpy.uint8)
+      white_mask = cv2.dilate(white_mask, d_kernel, iterations=1)
+      white_mask = cv2.erode(white_mask, e_kernel, iterations=1)
+      #cv2.imshow("white_refined_mask", white_mask)
     
-    h, w, d = image.shape
-    search_top = int(float(h) * self.line_search_top)
-    search_bot = int(float(h) * self.line_search_bot)
-    search_left = int(float(w) * 0.5)
-    search_right = w
+      h, w, d = image.shape
+      search_top = int(float(h) * self.line_search_top)
+      search_bot = int(float(h) * self.line_search_bot)
+      search_left = int(float(w) * 0.5)
+      search_right = w
 
-    white_mask[0:search_top, 0:w] = 0
-    white_mask[search_bot:h, 0:w] = 0
-    #white_mask[0:h, 0:search_left] = 0
-    #white_mask[0:h, search_right:w] = 0
-    cv2.imshow("white_trimmed_mask", white_mask)
+      white_mask[0:search_top, 0:w] = 0
+      white_mask[search_bot:h, 0:w] = 0
+      #white_mask[0:h, 0:search_left] = 0
+      #white_mask[0:h, search_right:w] = 0
+      whiteM = cv2.moments(white_mask)
+
+      cv2.imshow("white_trimmed_mask", white_mask)
 
 
-    # find yellow line
-    yellow_mask = cv2.inRange(hsv, self.yellow_lower_hsv, self.yellow_upper_hsv)
-    # cv2.imshow("raw_mask", mask)
+      # find yellow line
+      yellow_mask = cv2.inRange(hsv, temp_yellow_lower_hsv, self.yellow_upper_hsv)
+      # cv2.imshow("raw_mask", mask)
     
-    search_left = 0
-    search_right = int(float(w) * 0.5)
+      search_left = 0
+      search_right = int(float(w) * 0.5)
 
-    e_kernel = numpy.ones((5,5), numpy.uint8)
-    d_kernel = numpy.ones((3,3), numpy.uint8)
-    yellow_mask = cv2.dilate(yellow_mask, d_kernel, iterations=1)
-    yellow_mask = cv2.erode(yellow_mask, e_kernel, iterations=1)
-    #yellow_mask[0:h, 0:search_left] = 0
-    #yellow_mask[0:h, search_right:w] = 0
-    #cv2.imshow("yellow_refined_mask", yellow_mask)
+      e_kernel = numpy.ones((5,5), numpy.uint8)
+      d_kernel = numpy.ones((3,3), numpy.uint8)
+      yellow_mask = cv2.dilate(yellow_mask, d_kernel, iterations=1)
+      yellow_mask = cv2.erode(yellow_mask, e_kernel, iterations=1)
+      #yellow_mask[0:h, 0:search_left] = 0
+      #yellow_mask[0:h, search_right:w] = 0
+      #cv2.imshow("yellow_refined_mask", yellow_mask)
     
-    h, w, d = image.shape
-    search_top = int(float(h) * self.line_search_top)
-    search_bot = int(float(h) * self.line_search_bot)
+      h, w, d = image.shape
+      search_top = int(float(h) * self.line_search_top)
+      search_bot = int(float(h) * self.line_search_bot)
 
-    yellow_mask[0:search_top, 0:w] = 0
-    yellow_mask[search_bot:h, 0:w] = 0
-    cv2.imshow("yellow_trimmed_mask", yellow_mask)
+      yellow_mask[0:search_top, 0:w] = 0
+      yellow_mask[search_bot:h, 0:w] = 0
+      cv2.imshow("yellow_trimmed_mask", yellow_mask)
 
+      yellowM = cv2.moments(yellow_mask)
 
-    whiteM = cv2.moments(white_mask)
-    yellowM = cv2.moments(yellow_mask)
+      found_lines = ((whiteM['m00'] > self.min_pixels_for_line) or (yellowM['m00'] > self.min_pixels_for_line))
+
+      if not found_lines:
+        white_lower_hsv[2] -= 10
+        yellow_lower_hsv[2] -= 10
+
     if ((whiteM['m00'] > self.min_pixels_for_line) or (yellowM['m00'] > self.min_pixels_for_line) )  and not self.red_light:
     
 
