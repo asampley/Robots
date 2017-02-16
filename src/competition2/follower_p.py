@@ -116,7 +116,7 @@ class Follower:
       self.red_light = False
 	
     #debug
-    #self.red_light = False
+    self.red_light = False
 
     # find white line
     white_mask = cv2.inRange(hsv, self.lower_hsv, self.upper_hsv)

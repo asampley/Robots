@@ -30,18 +30,35 @@
 		<param name="~yellow_upper_hsv/h" type="int" value="45"/>
 		<param name="~yellow_upper_hsv/s" type="int" value="200"/>
 		<param name="~yellow_upper_hsv/v" type="int" value="240"/>
-
                
 		<!--
 		http://stackoverflow.com/questions/22588146/tracking-white-color-using-python-opencv
 		--> 
+
 		<param name="~lower_hsv/h" type="int" value="0"/>
 		<param name="~lower_hsv/s" type="int" value="0"/>
-		<param name="~lower_hsv/v" type="int" value="240"/>
+		<param name="~lower_hsv/v" type="int" value="225"/>
 		<param name="~upper_hsv/h" type="int" value="255"/>
-		<param name="~upper_hsv/s" type="int" value="15"/>
-		<param name="~upper_hsv/v" type="int" value="255"/>
+		<param name="~upper_hsv/s" type="int" value="30"/>
+		<param name="~upper_hsv/v" type="int" value="245"/>
+
+	<!-- No auto exposure or white balance
+		<param name="~yellow_lower_hsv/h" type="int" value="20"/>
+		<param name="~yellow_lower_hsv/s" type="int" value="190"/>
+		<param name="~yellow_lower_hsv/v" type="int" value="60"/>
+		<param name="~yellow_upper_hsv/h" type="int" value="30"/>
+		<param name="~yellow_upper_hsv/s" type="int" value="255"/>
+		<param name="~yellow_upper_hsv/v" type="int" value="255"/>
+
                 
+		<param name="~lower_hsv/h" type="int" value="0"/>
+		<param name="~lower_hsv/s" type="int" value="0"/>
+		<param name="~lower_hsv/v" type="int" value="40"/>
+		<param name="~upper_hsv/h" type="int" value="179"/>
+		<param name="~upper_hsv/s" type="int" value="160"/>
+		<param name="~upper_hsv/v" type="int" value="255"/>
+	--> 
+
 	</node>
 
 	<node pkg="competition2" type="x_is_death.py" name="x_is_death" output="screen">
