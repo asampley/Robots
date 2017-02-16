@@ -62,7 +62,7 @@ class Follower:
 
 
     self.line_search_bot = rospy.get_param("~line/search_bot_height_fraction", 1.0)
-    self.line_search_top = rospy.get_param("~line/search_top_height_fraction", 0.75)
+    self.line_search_top = rospy.get_param("~line/search_top_height_fraction", 0.60)
 
 
     self.white_prev_err = 0
@@ -131,13 +131,13 @@ class Follower:
     h, w, d = image.shape
     search_top = int(float(h) * self.line_search_top)
     search_bot = int(float(h) * self.line_search_bot)
-    search_left = int(float(w) * 0.5)
+    search_left = int(float(w) * 0.4)
     search_right = w
 
     white_mask[0:search_top, 0:w] = 0
     white_mask[search_bot:h, 0:w] = 0
-    #white_mask[0:h, 0:search_left] = 0
-    #white_mask[0:h, search_right:w] = 0
+    white_mask[0:h, 0:search_left] = 0
+    white_mask[0:h, search_right:w] = 0
     cv2.imshow("white_trimmed_mask", white_mask)
 
 
@@ -146,14 +146,14 @@ class Follower:
     # cv2.imshow("raw_mask", mask)
     
     search_left = 0
-    search_right = int(float(w) * 0.5)
+    search_right = int(float(w) * 0.6)
 
     e_kernel = numpy.ones((5,5), numpy.uint8)
     d_kernel = numpy.ones((3,3), numpy.uint8)
     yellow_mask = cv2.dilate(yellow_mask, d_kernel, iterations=1)
     yellow_mask = cv2.erode(yellow_mask, e_kernel, iterations=1)
-    #yellow_mask[0:h, 0:search_left] = 0
-    #yellow_mask[0:h, search_right:w] = 0
+    yellow_mask[0:h, 0:search_left] = 0
+    yellow_mask[0:h, search_right:w] = 0
     #cv2.imshow("yellow_refined_mask", yellow_mask)
     
     h, w, d = image.shape
@@ -206,7 +206,7 @@ class Follower:
       derr = white_derr + yellow_derr
 
       
-      self.twist.angular.z =( -float(err) * kp + float(derr) * kd)/2.0
+      self.twist.angular.z =( -float(err) * kp + float(derr) * kd)/4.0
       if(dist < w // 2):
         self.twist.linear.x = 0.2
       else:
@@ -220,6 +220,8 @@ class Follower:
       self.yellow_prev_err = yellow_err
       # END CONTROL
     elif not self.red_light:
+      self.twist.linear.x = 0.16
+      self.twist.angular.z = 0.08
       self.cmd_vel_pub.publish(self.twist)
     else:
       self.cmd_vel_pub.publish(Twist())
