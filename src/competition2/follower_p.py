@@ -154,8 +154,17 @@ class Follower:
     yellow_mask = cv2.erode(yellow_mask, e_kernel, iterations=1)
     yellow_mask[0:h, 0:search_left] = 0
     yellow_mask[0:h, search_right:w] = 0
-    #cv2.imshow("yellow_refined_mask", yellow_mask)
+  
+    h,w,d = image.shape
+    search_top = int(float(h) * self.line_search_top)
+    search_bot = int(float(h) * self.line_search_bot)
+
+    yellow_mask[0:search_top, 0:w] = 0
+    yellow_mask[search_bot:h, 0:w] = 0
+    cv2.imshow("yellow_trimmed_mask", yellow_mask)
     
+
+
     whiteM = cv2.moments(white_mask)
     yellowM = cv2.moments(yellow_mask)
 
