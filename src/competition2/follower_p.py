@@ -54,7 +54,7 @@ class Follower:
     self.light2_lower_hsv = numpy.array([\
       rospy.get_param("~light2/lower_hsv/h", 160),\
       rospy.get_param("~light2/lower_hsv/s", 200),\
-      rospy.get_param("~light2/lower_hsv/v", 200)])
+      rospy.get_param("~light2/lower_hsv/v", 255)])
     self.light2_upper_hsv = numpy.array([\
       rospy.get_param("~light2/upper_hsv/h", 179),\
       rospy.get_param("~light2/upper_hsv/s", 255),\
@@ -67,7 +67,8 @@ class Follower:
 
     self.white_prev_err = 0
     self.yellow_prev_err = 0
-    self.red_light = False
+    self.red_light = True
+    self.green_light_frame_count = 0
 
   def image_callback(self, msg):
     image = self.bridge.imgmsg_to_cv2(msg,desired_encoding='bgr8')
@@ -103,20 +104,22 @@ class Follower:
 
 #    light_mask = cv2.erode(light_mask, numpy.ones((3,3), numpy.uint8), iterations=1)
     light_mask = cv2.dilate(light_mask, numpy.ones((5,5), numpy.uint8), iterations=1)
+    h, w, d = image.shape
+    light_mask[(0.1 * float(h)):h, 0:w] = 0
+
     cv2.imshow("light_mask", light_mask)
 
     M = cv2.moments(light_mask)
-    if M['m00'] > 100:
-      if not self.red_light:
-        print("Red Light!!!")
-      self.red_light = True
+    if M['m00'] < 100:
+      self.green_light_frame_count = self.green_light_frame_count + 1
+      print(self.green_light_frame_count)
+
+    if self.green_light_frame_count > 10:
+      self.red_light = False	
+    if self.red_light:
+      print("Red Light!!!")
     else:
-      if self.red_light:
-        print("Green Light!!!")
-      self.red_light = False
-	
-    #debug
-    self.red_light = False
+      print("Green Light!!!")
 
     # find white line
     white_mask = cv2.inRange(hsv, self.lower_hsv, self.upper_hsv)
@@ -128,7 +131,6 @@ class Follower:
     white_mask = cv2.erode(white_mask, e_kernel, iterations=1)
     #cv2.imshow("white_refined_mask", white_mask)
     
-    h, w, d = image.shape
     search_top = int(float(h) * self.line_search_top)
     search_bot = int(float(h) * self.line_search_bot)
     search_left = int(float(w) * 0.4)
