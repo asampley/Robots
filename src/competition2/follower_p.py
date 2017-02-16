@@ -71,8 +71,29 @@ class Follower:
 
   def image_callback(self, msg):
     image = self.bridge.imgmsg_to_cv2(msg,desired_encoding='bgr8')
+
+    """
     # blur to remove noise
-    image = cv2.medianBlur(image, 5)
+    #Z = image.reshape((-1,3))
+    Z = numpy.float32(Z)
+ 
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 5, 1.0)
+    K = 3
+    ret,label,center = cv2.kmeans(Z,K,criteria,5,cv2.KMEANS_RANDOM_CENTERS)
+ 
+    center = numpy.uint8(center)
+    res = center[label.flatten()]
+    res2 = res.reshape((image.shape))
+    image=res2
+    """
+
+    #image = cv2.medianBlur(image, 7)
+
+    #b, g, r = cv2.split(image)
+    #red = cv2.equalizeHist(r)
+    #green = cv2.equalizeHist(g)
+    #blue = cv2.equalizeHist(b)
+    #image = cv2.merge((blue, green, red))
 
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
@@ -110,20 +131,29 @@ class Follower:
     h, w, d = image.shape
     search_top = int(float(h) * self.line_search_top)
     search_bot = int(float(h) * self.line_search_bot)
+    search_left = int(float(w) * 0.5)
+    search_right = w
 
     white_mask[0:search_top, 0:w] = 0
     white_mask[search_bot:h, 0:w] = 0
+    #white_mask[0:h, 0:search_left] = 0
+    #white_mask[0:h, search_right:w] = 0
     cv2.imshow("white_trimmed_mask", white_mask)
 
 
     # find yellow line
     yellow_mask = cv2.inRange(hsv, self.yellow_lower_hsv, self.yellow_upper_hsv)
     # cv2.imshow("raw_mask", mask)
+    
+    search_left = 0
+    search_right = int(float(w) * 0.5)
 
     e_kernel = numpy.ones((5,5), numpy.uint8)
     d_kernel = numpy.ones((3,3), numpy.uint8)
     yellow_mask = cv2.dilate(yellow_mask, d_kernel, iterations=1)
     yellow_mask = cv2.erode(yellow_mask, e_kernel, iterations=1)
+    #yellow_mask[0:h, 0:search_left] = 0
+    #yellow_mask[0:h, search_right:w] = 0
     #cv2.imshow("yellow_refined_mask", yellow_mask)
     
     h, w, d = image.shape
@@ -176,11 +206,11 @@ class Follower:
       derr = white_derr + yellow_derr
 
       
-      self.twist.angular.z = -float(err) * kp + float(derr) * kd
+      self.twist.angular.z =( -float(err) * kp + float(derr) * kd)/2.0
       if(dist < w // 2):
-        self.twist.linear.x = 0.8
+        self.twist.linear.x = 0.2
       else:
-        self.twist.linear.x = 0.3
+        self.twist.linear.x = 0.1
       #print("linx: " + str(self.twist.linear.x))
       #print("twistz" + str(self.twist.angular.z))
 
