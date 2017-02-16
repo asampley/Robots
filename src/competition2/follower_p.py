@@ -121,7 +121,7 @@ class Follower:
     # find white line
     white_mask = cv2.inRange(hsv, self.lower_hsv, self.upper_hsv)
     # cv2.imshow("raw_mask", mask)
-
+ 
     e_kernel = numpy.ones((5,5), numpy.uint8)
     d_kernel = numpy.ones((3,3), numpy.uint8)
     white_mask = cv2.dilate(white_mask, d_kernel, iterations=1)
@@ -156,17 +156,9 @@ class Follower:
     yellow_mask[0:h, search_right:w] = 0
     #cv2.imshow("yellow_refined_mask", yellow_mask)
     
-    h, w, d = image.shape
-    search_top = int(float(h) * self.line_search_top)
-    search_bot = int(float(h) * self.line_search_bot)
-
-    yellow_mask[0:search_top, 0:w] = 0
-    yellow_mask[search_bot:h, 0:w] = 0
-    cv2.imshow("yellow_trimmed_mask", yellow_mask)
-
-
     whiteM = cv2.moments(white_mask)
     yellowM = cv2.moments(yellow_mask)
+
     if ((whiteM['m00'] > self.min_pixels_for_line) or (yellowM['m00'] > self.min_pixels_for_line) )  and not self.red_light:
     
 
