@@ -1,0 +1,10 @@
+<launch>
+
+	<node pkg="joy" type="joy_node" name="joy_node"/>
+	<node pkg="demo4" type="joy_teleop.py" name="joy_teleop" output="screen">
+		<remap from="cmd_vel" to="cmd_vel_mux/input/teleop"/>
+		<param name="~linear_scale" value="0.2"/>
+		<param name="~angular_scale" value="1"/>
+	</node>
+	<node pkg="rosbag" type="record" name="rosbag_record" args="-O demo4_live_data.bag /scan /tf"/>
+</launch>

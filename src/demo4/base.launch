@@ -1,0 +1,9 @@
+<launch>
+	<include file="$(find turtlebot_bringup)/launch/minimal.launch"/>
+	<include file="$(find openni2_launch)/launch/openni2.launch"/>
+	<!--include file="$(find turtlebot_stage)/launch/turtlebot_in_stage.launch"/-->
+
+	<node pkg="depthimage_to_laserscan" type="depthimage_to_laserscan" name="depthimage_to_laserscan">
+		<remap from="image" to="camera/depth/image_rect"/>
+	</node>
+</launch>
