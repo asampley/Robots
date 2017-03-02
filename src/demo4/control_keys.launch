@@ -1,0 +1,10 @@
+<launch>
+
+	<node pkg="joy" type="joy_node" name="joy_node"/>
+	<node pkg="demo4" type="key_publisher.py" name="key_publisher"/>
+	<node pkg="demo4" type="keys_to_twist_with_ramps.py" name="keys_teleop" output="screen">
+		<remap from="cmd_vel" to="cmd_vel_mux/input/teleop"/>
+		<param name="~linear_scale" value="0.2"/>
+		<param name="~angular_scale" value="1"/>
+	</node>
+</launch>
