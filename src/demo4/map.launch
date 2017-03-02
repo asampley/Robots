@@ -7,6 +7,4 @@
 	<param name="/slam_gmapping/ymax" value="10"/>
 	<param name="/slam_gmapping/ymin" value="-10"/>
 	<node pkg="gmapping" type="slam_gmapping" name="slam_gmapping"/>
-
-	<!--node pkg="rosbag" type="play" args="--clock data.bag" name="rosbag_play" output="screen"/-->
 </launch>
