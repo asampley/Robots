@@ -42,7 +42,7 @@ class Drawer:
     cv2.namedWindow("axis",1)
     self.bridge = cv_bridge.CvBridge()
     self.image_sub = rospy.Subscriber ('camera/rgb/image_raw',Image,self.image_callback)
-    self.cmd_vel_pub = rospy.Publisher('cmd_vel_mux/input/teleop',Twist, queue_size=1)
+    self.cmd_vel_pub = rospy.Publisher('twist_out',Twist, queue_size=1)
     self.twist = Twist()
 
 
@@ -51,7 +51,7 @@ class Drawer:
     image = self.bridge.imgmsg_to_cv2(msg,desired_encoding='bgr8')
 
     gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
-    ret, corners = cv2.findChessboardCorners(gray, (7,6),None)
+    ret, corners = cv2.findChessboardCorners(gray, (8,6),None)
 
     if ret == True:
         #corners2 = cv2.cornerSubPix(gray,corners,(11,11),(-1,-1),criteria)
@@ -73,12 +73,30 @@ class Drawer:
 
         im00 = imgpts[0][0][0]
         im01 = imgpts[0][0][1]
-        print("0")
-        print(imgpts[0])
-        print("1")
-        print(imgpts[1])
-        print("2")
-        print(imgpts[2])
+#        print("0")
+#        print(imgpts[0])
+#        print("1")
+#        print(imgpts[1])
+#        print("2")
+#        print(imgpts[2])
+        print("target" + str(tvecs))
+
+        # if we are far from the checkerboard, move forward
+        if tvecs[2] > 10:
+          self.twist.linear.x = 0
+        else:
+          self.twist.linear.x = 0
+
+        # if we are not directly facing the checkerboard, turn
+        if tvecs[0] > 1:
+          self.twist.angular.z = -0.2
+        elif tvecs[0] < -1:
+          self.twist.angular.z = 0.2
+        else:
+          self.twist.angular.z = 0
+
+        self.cmd_vel_pub.publish(self.twist)
+        print("twist" + str(self.twist))
 
     else:
         self.twist.linear.x = 0
@@ -87,7 +105,7 @@ class Drawer:
 
         #cv2.imshow('img',img)
     cv2.imshow("axis",image)
-    cv2.waitKey(1)
+    cv2.waitKey(20)
 
 rospy.init_node('axis_shower')
 drawer = Drawer()
