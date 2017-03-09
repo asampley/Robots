@@ -91,11 +91,11 @@ class Drawer:
 
         # if we are far from the checkerboard, move forward and turn
         if tvecs[2] > 20:
-          self.twist.linear.x = 0.1
+          self.twist.linear.x = 0.05
           if tvecs[0] > 1:
-            self.twist.angular.z = -0.2
+            self.twist.angular.z = -0.1
           elif tvecs[0] < -1:
-            self.twist.angular.z = 0.2
+            self.twist.angular.z = 0.1
           else:
             self.twist.angular.z = 0
         else:
@@ -109,7 +109,7 @@ class Drawer:
 
     else:
         self.twist.linear.x = 0
-        self.twist.angular.z = 0.2
+        self.twist.angular.z = 0.1
         self.cmd_vel_pub.publish(self.twist)
 
         #cv2.imshow('img',img)
