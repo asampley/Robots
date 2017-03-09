@@ -9,13 +9,13 @@ from geometry_msgs.msg import Twist
 # Load previously saved data
 #with np.load('B.npz') as X:
 #    mtx, dist, _, _ = [X[i] for i in ('mtx','dist','rvecs','tvecs')]
-
 mtx = np.array([
   [544.956062, 0.000000, 318.427876], 
   [0.000000, 549.845690, 235.690027], 
   [0.000000, 0.000000, 1.000000]])
 
 dist = np.array([0.052190, -0.149998, 0.001184, -0.006267, 0.000000])
+#dist = np.array([0.0, 0.0, 0.0, 0.0, 0.0])
 
 def draw(img, corners, imgpts):
     corner = tuple(corners[0].ravel())
@@ -28,8 +28,8 @@ def draw(img, corners, imgpts):
     #return img
 
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
-objp = np.zeros((6*7,3), np.float32)
-objp[:,:2] = np.mgrid[0:7,0:6].T.reshape(-1,2)
+objp = np.zeros((6*8,3), np.float32)
+objp[:,:2] = np.mgrid[0:8,0:6].T.reshape(-1,2)
 
 axis = np.float32([[3,0,0], [0,3,0], [0,0,-3]]).reshape(-1,3)
 
@@ -43,7 +43,7 @@ class Drawer:
     #print("starting")
     cv2.namedWindow("axis",1)
     self.bridge = cv_bridge.CvBridge()
-    self.image_sub = rospy.Subscriber ('camera/rgb/image_raw',Image,self.image_callback, queue_size=1)
+    self.image_sub = rospy.Subscriber ('image',Image,self.image_callback, queue_size=1)
     self.cmd_vel_pub = rospy.Publisher('twist_out',Twist, queue_size=1)
     self.twist = Twist()
 
@@ -51,9 +51,15 @@ class Drawer:
   def image_callback(self,msg):
     #print("bleh")
     image = self.bridge.imgmsg_to_cv2(msg,desired_encoding='bgr8')
+#    cv2.imshow("axis", image)
+    cv2.waitKey(1)
 
     gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
-    ret, corners = cv2.findChessboardCorners(gray, (8,6),None)
+    image = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+#    ret, corners = cv2.findChessboardCorners(gray, (8,6), None)
+    ret, corners = cv2.findChessboardCorners(gray, (8,6), None, cv2.CALIB_CB_ADAPTIVE_THRESH + cv2.CALIB_CB_NORMALIZE_IMAGE)
+
+    cv2.drawChessboardCorners(image, (8,6), corners, ret)
 
     if ret == True:
         #corners2 = cv2.cornerSubPix(gray,corners,(11,11),(-1,-1),criteria)
@@ -73,8 +79,8 @@ class Drawer:
         cv2.line(image, corner, tuple(imgpts[2].ravel()), (0,0,255), 5)
         
 
-        im00 = imgpts[0][0][0]
-        im01 = imgpts[0][0][1]
+#        im00 = imgpts[0][0][0]
+#        im01 = imgpts[0][0][1]
 #        print("0")
 #        print(imgpts[0])
 #        print("1")
@@ -84,7 +90,7 @@ class Drawer:
         print("target" + str(tvecs))
 
         # if we are far from the checkerboard, move forward and turn
-        if tvecs[2] > 14:
+        if tvecs[2] > 20:
           self.twist.linear.x = 0.1
           if tvecs[0] > 1:
             self.twist.angular.z = -0.2
@@ -108,7 +114,7 @@ class Drawer:
 
         #cv2.imshow('img',img)
     cv2.imshow("axis",image)
-    cv2.waitKey(20)
+    cv2.waitKey(1)
 
 rospy.init_node('axis_shower')
 drawer = Drawer()

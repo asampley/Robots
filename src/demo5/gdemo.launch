@@ -3,6 +3,7 @@
 	<include file="$(find turtlebot_bringup)/launch/minimal.launch"/>
 	
 	<node pkg="demo5" type="gdemo.py" name="groupdemo" output="screen">
+		<remap from="image" to="camera/rgb/image_raw"/>
 		<remap from="twist_out" to="x_twist_in"/>
 	</node>
 
