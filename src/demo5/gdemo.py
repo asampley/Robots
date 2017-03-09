@@ -41,7 +41,7 @@ class Drawer:
     #print("starting")
     cv2.namedWindow("axis",1)
     self.bridge = cv_bridge.CvBridge()
-    self.image_sub = rospy.Subscriber ('camera/rgb/image_raw',Image,self.image_callback)
+    self.image_sub = rospy.Subscriber ('camera/rgb/image_raw',Image,self.image_callback, queue_size=1)
     self.cmd_vel_pub = rospy.Publisher('twist_out',Twist, queue_size=1)
     self.twist = Twist()
 
@@ -81,19 +81,20 @@ class Drawer:
 #        print(imgpts[2])
         print("target" + str(tvecs))
 
-        # if we are far from the checkerboard, move forward
-        if tvecs[2] > 10:
-          self.twist.linear.x = 0
+        # if we are far from the checkerboard, move forward and turn
+        if tvecs[2] > 14:
+          self.twist.linear.x = 0.1
+          if tvecs[0] > 1:
+            self.twist.angular.z = -0.2
+          elif tvecs[0] < -1:
+            self.twist.angular.z = 0.2
+          else:
+            self.twist.angular.z = 0
         else:
           self.twist.linear.x = 0
+          self.twist.angular.z = 0
 
         # if we are not directly facing the checkerboard, turn
-        if tvecs[0] > 1:
-          self.twist.angular.z = -0.2
-        elif tvecs[0] < -1:
-          self.twist.angular.z = 0.2
-        else:
-          self.twist.angular.z = 0
 
         self.cmd_vel_pub.publish(self.twist)
         print("twist" + str(self.twist))
