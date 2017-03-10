@@ -36,7 +36,7 @@ def draw(img, corners, imgpts):
 
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 objp = np.zeros((6*8,3), np.float32)
-objp[:,:2] = np.mgrid[0:8,0:6].T.reshape(-1,2)
+objp[:,:2] = np.mgrid[-4:4,-3:3].T.reshape(-1,2)
 
 objp = objp * 0.026
 print(objp)
@@ -92,7 +92,7 @@ class Drawer:
         imgpts, jac = cv2.projectPoints(axis, rvecs, tvecs, mtx, dist)
 
         #image = draw(image,corners,imgpts)
-        corner = tuple(corners[0].ravel())
+        corner = tuple(corners[28].ravel())
         cv2.line(image, corner, tuple(imgpts[0].ravel()), (255,0,0), 5)
         cv2.line(image, corner, tuple(imgpts[1].ravel()), (0,255,0), 5)
         cv2.line(image, corner, tuple(imgpts[2].ravel()), (0,0,255), 5)
@@ -113,8 +113,8 @@ class Drawer:
         rot_period   = rot_radians / rot_velocity
         rot_twist = Twist()
         rot_twist.angular.z = rot_velocity
-        # second, move towards the checkerboard for .25m or within .2m
-        move_meters = min(0.25, np.linalg.norm(tvec_target[np.array([0,2])]) - 0.2)
+        # second, move towards the checkerboard for .25m or within .15m
+        move_meters = min(0.25, np.linalg.norm(tvec_target[np.array([0,2])]) - 0.15)
         move_velocity = 0.2
         move_period   = move_meters / move_velocity
         move_twist = Twist()
