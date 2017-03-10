@@ -1,0 +1,16 @@
+<launch>
+	<include file="$(find openni2_launch)/launch/openni2.launch"/>
+	<include file="$(find turtlebot_bringup)/launch/minimal.launch"/>
+	
+	<node pkg="demo5" type="gdemo2.py" name="groupdemo" output="screen">
+		<remap from="image" to="camera/rgb/image_raw"/>
+		<remap from="twist_out" to="x_twist_in"/>
+	</node>
+
+	<node pkg="demo5" type="x_is_death.py" name="x_is_death" output="screen">
+		<remap from="twist_in" to="x_twist_in"/>
+		<remap from="twist_out" to="cmd_vel_mux/input/teleop"/>
+	</node>
+
+	<node pkg="joy" type="joy_node" name="joy_node"/>
+</launch>
