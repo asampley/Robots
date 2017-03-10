@@ -55,11 +55,18 @@ class Drawer:
     cv2.namedWindow("target", 1)
     self.bridge = cv_bridge.CvBridge()
     self.image_sub = rospy.Subscriber ('image',Image,self.image_callback, queue_size=1)
+    self.image = None
+    self.processTimer = rospy.Timer(rospy.Duration(1.0), self.process_image)
+  def image_callback(self, msg):
+    self.image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
 
-  def image_callback(self,msg):
+  def process_image(self, event):
     global target_found, twist_and_duration, go, target_to_be_reached
+    if self.image is None:
+      return
+
+    image = self.image
     #print("bleh")
-    image = self.bridge.imgmsg_to_cv2(msg,desired_encoding='bgr8')
 #    print(str(target_found) + " " + str(go))
     if target_found or not go:
       cv2.imshow("axis", image)
@@ -106,8 +113,8 @@ class Drawer:
         rot_period   = rot_radians / rot_velocity
         rot_twist = Twist()
         rot_twist.angular.z = rot_velocity
-        # second, move towards the checkerboard for .25m or within .1m
-        move_meters = min(0.25, np.linalg.norm(tvec_target[np.array([0,2])]) - 0.1)
+        # second, move towards the checkerboard for .25m or within .2m
+        move_meters = min(0.25, np.linalg.norm(tvec_target[np.array([0,2])]) - 0.2)
         move_velocity = 0.2
         move_period   = move_meters / move_velocity
         move_twist = Twist()
@@ -120,9 +127,15 @@ class Drawer:
         if move_meters < 0.24:
           target_to_be_reached = True
 
-        print("Directions: " + str(twist_and_duration))
-
+    else:
+      twist = Twist()
+      twist.linear.x = 0
+      twist.angular.z = 0.4
+      duration = 0.8
+      twist_and_duration = [(twist, duration)]
+      
         #cv2.imshow('img',img)
+    print("Directions: " + str(twist_and_duration))
     cv2.imshow("target",image)
     cv2.waitKey(1)
 
@@ -142,19 +155,17 @@ twist = Twist()
 
 
 while True:
-  if not target_found and not target_reached:
-    twist.linear.x = 0
-    twist.angular.z = 0.1
-    cmd_vel_pub.publish(twist)
-  elif not target_reached:
+  if not target_reached:
     while twist_and_duration:
-      print("Moving towards target")
       twist, duration = twist_and_duration.pop(0)
       cmd_vel_pub.publish(twist)
       rospy.sleep(duration)
+    cmd_vel_pub.publish(Twist())
     target_found = False
     if target_to_be_reached:
       target_reached = True
+  else:
+    cmd_vel_pub.publish(Twist())
     
 
 """
