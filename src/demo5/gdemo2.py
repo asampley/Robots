@@ -164,6 +164,7 @@ while True:
     target_found = False
     if target_to_be_reached:
       target_reached = True
+      print("Reached destination")
   else:
     cmd_vel_pub.publish(Twist())
     
