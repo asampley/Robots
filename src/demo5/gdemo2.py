@@ -23,6 +23,7 @@ twist_and_duration = []
 target_to_be_reached = False
 target_reached = False
 target_found = False
+search_left = False
 
 def draw(img, corners, imgpts):
     corner = tuple(corners[0].ravel())
@@ -61,7 +62,7 @@ class Drawer:
     self.image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
 
   def process_image(self, event):
-    global target_found, twist_and_duration, go, target_to_be_reached
+    global target_found, twist_and_duration, go, target_to_be_reached, search_left
     if self.image is None:
       return
 
@@ -100,7 +101,7 @@ class Drawer:
         print(rvecs)
         print(tvecs)
         # move the target to be 0.25m in front of the grid
-        rvec_target, tvec_target, _,_,_,_,_,_,_,_ = cv2.composeRT(np.array([0,0,0], dtype=np.float32), np.array([0,0,-0.25], dtype=np.float32), rvecs, tvecs)
+        rvec_target, tvec_target, _,_,_,_,_,_,_,_ = cv2.composeRT(np.array([0,0,0], dtype=np.float32), np.array([0,0,-0.3], dtype=np.float32), rvecs, tvecs)
         print("target" + str(tvec_target))
         print("rotation" + str(rvec_target))
 
@@ -113,8 +114,9 @@ class Drawer:
         rot_period   = rot_radians / rot_velocity
         rot_twist = Twist()
         rot_twist.angular.z = rot_velocity
-        # second, move towards the checkerboard for .25m or within .15m
-        move_meters = min(0.25, np.linalg.norm(tvec_target[np.array([0,2])]) - 0.15)
+        # second, move towards the checkerboard for .25m or within .1m
+        move_meters = min(0.25, np.linalg.norm(tvec_target[np.array([0,2])]) - 0.10)
+        print(np.linalg.norm(tvec_target[np.array([0,2])]))
         move_velocity = 0.2
         move_period   = move_meters / move_velocity
         move_twist = Twist()
@@ -124,13 +126,19 @@ class Drawer:
         # say that we found the target
         target_found = True
         # say that we will reach the target
-        if move_meters < 0.24:
+        if move_meters < 0.1:
           target_to_be_reached = True
+
+        search_left = tvecs[0] < 0
 
     else:
       twist = Twist()
       twist.linear.x = 0
-      twist.angular.z = 0.4
+      angular_speed = 0.4
+      if search_left:
+        twist.angular.z = angular_speed
+      else:
+        twist.angular.z = -angular_speed
       duration = 0.8
       twist_and_duration = [(twist, duration)]
       

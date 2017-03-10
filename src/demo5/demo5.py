@@ -11,9 +11,11 @@ from geometry_msgs.msg import Twist
 #    mtx, dist, _, _ = [X[i] for i in ('mtx','dist','rvecs','tvecs')]
 
 mtx = np.array([
-[537.283820, 0.000000, 323.456807], [0.000000, 536.303336, 235.787179], [0.000000, 0.000000, 1.000000]])
+  [544.956062, 0.000000, 318.427876], 
+  [0.000000, 549.845690, 235.690027], 
+  [0.000000, 0.000000, 1.000000]])
 
-dist = np.array([0.002410, -0.070359, -0.001409, -0.000617, 0.000000])
+dist = np.array([0.052190, -0.149998, 0.001184, -0.006267, 0.000000])
 
 def draw(img, corners, imgpts):
     corner = tuple(corners[0].ravel())
@@ -26,8 +28,8 @@ def draw(img, corners, imgpts):
     #return img
 
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
-objp = np.zeros((6*7,3), np.float32)
-objp[:,:2] = np.mgrid[0:7,0:6].T.reshape(-1,2)
+objp = np.zeros((6*8,3), np.float32)
+objp[:,:2] = np.mgrid[0:8,0:6].T.reshape(-1,2)
 
 axis = np.float32([[3,0,0], [0,3,0], [0,0,-3]]).reshape(-1,3)
 
@@ -45,9 +47,12 @@ class Drawer:
   def image_callback(self,msg):
     #print("bleh")
     image = self.bridge.imgmsg_to_cv2(msg,desired_encoding='bgr8')
+    cv2.waitkey(1)
 
     gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
-    ret, corners = cv2.findChessboardCorners(gray, (7,6),None)
+    image = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+    ret, corners = cv2.findChessboardCorners(gray, (8,6),None)
+    cv2.drawChessboardCorners(image, (8,6), corners, ret)
 
     if ret == True:
         #corners2 = cv2.cornerSubPix(gray,corners,(11,11),(-1,-1),criteria)
