@@ -8,12 +8,12 @@
 		<arg name="initial_pose_x" value="5.8438633289"/>
 		<arg name="initial_pose_y" value="5.37321792854"/>
 		<arg name="initial_pose_a" value="2.264"/>
-	</include>	
-<!--include file="$(find turtlebot_rviz_launchers)/launch/view_navigation.launch"/-->
+	</include>
+	<!--include file="$(find turtlebot_rviz_launchers)/launch/view_navigation.launch"/-->
 
 	<!--node pkg="depthimage_to_laserscan" type="depthimage_to_laserscan" name="depthimage_to_laserscan">
 		<remap from="image" to="camera/depth/image_rect"/>
 	</node-->
 
-	<!--node pkg="competition3" type="patrol.py" name="patrol"/-->
+	<node pkg="competition3" type="patrol.py" name="patrol"/>
 </launch>
