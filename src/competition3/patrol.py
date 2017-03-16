@@ -2,9 +2,9 @@
 
 import rospy
 import actionlib
+import sys
 
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
-
 
 waypoints = [  
     [(3.6607125401, 7.31828998725, 0.0), (0.0, 0.0, -0.899002073698, 0.437944370311)],
@@ -12,6 +12,7 @@ waypoints = [
     [(1.56175864561, 0.84328832173, 0.0), (0.0, 0.0, 0.484581645217, 0.874746036927)],
     [(5.8438633289, 5.37321792854, 0.0), (0.0, 0.0, 0.905211098608, 0.424962194739)]
 ]
+
 
 
 def goal_pose(pose):  
@@ -33,9 +34,13 @@ if __name__ == '__main__':
 
     client = actionlib.SimpleActionClient('move_base', MoveBaseAction)  
     client.wait_for_server()
+ 
+    lap_counter = 0
+ 
 
-    while True:
+    while (lap_counter <3):
         for pose in waypoints:   
             goal = goal_pose(pose)
             client.send_goal(goal)
             client.wait_for_result()
+        lap_counter = lap_counter + 1
