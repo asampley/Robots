@@ -16,6 +16,7 @@ dist = np.array([-0.027223, 0.098406, 0.002497, -0.001910, 0.000000], dtype=np.f
 #with cv2.load(calibrationFileName) as X:
 #    mtx, dist, _, _ = [X[i] for i in ('camera_matrix','distortion_coefficients')]
 
+found=False
 tvec=np.zeros((1,3))
 rvec=np.zeros((1,3))
 
@@ -36,15 +37,16 @@ cv2.waitKey(1)
 bridge = cv_bridge.CvBridge()
 
 def image_callback(msg):
-  global tvec, rvec
+  global tvec, rvec, found
 #  print(msg)
   img = bridge.imgmsg_to_cv2(msg,desired_encoding='bgr8')
+  if found:
   # project 3D points to image plane
-  imgpts, jac = cv2.projectPoints(axis, rvec, tvec, mtx, dist)
-  print("Position: " + str(tvec))
-  print("Rotation: " + str(rvec))
-  print(imgpts)
-  draw(img, imgpts)
+    imgpts, jac = cv2.projectPoints(axis, rvec, tvec, mtx, dist)
+    print("Position: " + str(tvec))
+    print("Rotation: " + str(rvec))
+    print(imgpts)
+    draw(img, imgpts)
   cv2.imshow('img',img)
   cv2.waitKey(1)
 #  ret, corners = cv2.findChessboardCorners(gray, (8,6),None, cv2.CALIB_CB_FAST_CHECK)
@@ -60,7 +62,7 @@ def image_callback(msg):
 #    rvecs, tvecs, inliers = cv2.solvePnPRansac(objp, corners, mtx, dist)
 
 def marker_callback(msg):
-	global tvec, rvec
+	global tvec, rvec, found
 	if len(msg.markers) > 0:
 		
 		x = msg.markers[0].pose.pose.position.x
@@ -96,7 +98,9 @@ def marker_callback(msg):
 		"""
 		#print("Position: " + str(tvec))
 		#print("Rotation: " + str(rvec))
+		found = True
 	else:
+		found = False
 		print("No Markers Found")
 
 #    img = draw(img,corners,imgpts)
