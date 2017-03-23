@@ -30,7 +30,7 @@ criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 #objp = np.zeros((6*8,3), np.float32)
 #objp[:,:2] = np.mgrid[0:8,0:6].T.reshape(-1,2)
 
-axis = np.float32([[0,0,0], [.1,0,0], [0,.1,0], [0,0,-.1]]).reshape(-1,3)
+axis = np.float32([[0,0,0], [.1,0,0], [0,.1,0], [0,0,.1]]).reshape(-1,3)
 cv2.namedWindow('img', 1)
 cv2.waitKey(1)
 bridge = cv_bridge.CvBridge()
@@ -76,12 +76,12 @@ def marker_callback(msg):
 		x = ox / math.sqrt(1 - ow*ow)
 		y = oy / math.sqrt(1 - ow*ow)
 		z = oz / math.sqrt(1 - ow*ow)
-
-		ratio = math.sqrt(x*x+y*y+z*z)    
-		x = -x/(ratio * angle)
-		y = -y/(ratio * angle)
-		z = -z/(ratio * angle)
-
+		
+		length = math.sqrt(x*x+y*y+z*z)    
+		x = x/length * angle
+		y = y/length * angle
+		z = z/length * angle
+		
 		rvec = np.array([[x],[y],[z]])
 		
 		#print("Position: " + str(tvec))

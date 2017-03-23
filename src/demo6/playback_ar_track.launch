@@ -1,4 +1,5 @@
 <launch>	
+	<node name="rviz" pkg="rviz" type="rviz"/>
 
 	<!-- Launch the usb camera acquisition node -->
 	<node name="playback" pkg="rosbag" type="play" args="-r 0.1 --clock demo6.bag"/>
@@ -22,5 +23,4 @@
 		<remap from="image" to="/usb_cam/image_raw"/>
 		<remap from="marker" to="ar_pose_marker"/>
 	</node>
-
 </launch>
