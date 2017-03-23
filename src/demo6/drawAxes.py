@@ -62,7 +62,7 @@ def image_callback(msg):
 def marker_callback(msg):
 	global tvec, rvec
 	if len(msg.markers) > 0:
-		"""
+		
 		x = msg.markers[0].pose.pose.position.x
 		y = msg.markers[0].pose.pose.position.y
 		z = msg.markers[0].pose.pose.position.z
@@ -83,17 +83,17 @@ def marker_callback(msg):
 		z = -z/(ratio * angle)
 
 		rvec = np.array([[x],[y],[z]])
-		"""
+		
 		#print("Position: " + str(tvec))
 		#print("Rotation: " + str(rvec))
-
+		"""
 		tvec[0,0] = msg.markers[0].pose.pose.position.x
 		tvec[0,1] = msg.markers[0].pose.pose.position.y
 		tvec[0,2] = msg.markers[0].pose.pose.position.z
 		rvec[0,0] = msg.markers[0].pose.pose.orientation.x
 		rvec[0,1] = msg.markers[0].pose.pose.orientation.y
 		rvec[0,2] = msg.markers[0].pose.pose.orientation.z
-
+		"""
 		#print("Position: " + str(tvec))
 		#print("Rotation: " + str(rvec))
 	else:

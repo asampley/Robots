@@ -1,7 +1,7 @@
 <launch>	
 
 	<!-- Launch the usb camera acquisition node -->
-	<node name="playback" pkg="rosbag" type="play" args="--clock demo6.bag"/>
+	<node name="playback" pkg="rosbag" type="play" args="-r 0.1 --clock demo6.bag"/>
 	<arg name="marker_size" default="4.4" />
 	<arg name="max_new_marker_error" default="0.08" />
 	<arg name="max_track_error" default="0.2" />
