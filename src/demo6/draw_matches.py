@@ -49,7 +49,9 @@ def draw_matches(img1, kp1, img2, kp2, matches, color=None):
         cv2.line(new_img, end1, end2, c, thickness)
         cv2.circle(new_img, end1, r, c, thickness)
         cv2.circle(new_img, end2, r, c, thickness)
-    
-    plt.figure(figsize=(15,15))
-    plt.imshow(new_img, 'gray')
-    plt.show()
+
+    cv2.imshow('img', new_img)    
+    cv2.waitKey(1)
+    #plt.figure(figsize=(15,15))
+    #plt.imshow(new_img, 'gray')
+    #plt.show()

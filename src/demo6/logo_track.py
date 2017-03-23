@@ -2,43 +2,69 @@
 
 import numpy as np
 import cv2
+import cv_bridge
+import rospy
 from draw_matches import draw_matches
 from matplotlib import pyplot as plt
+from sensor_msgs.msg import Image
 
-MIN_MATCH_COUNT = 10
+mtx = np.array([[612.372615, 0.000000, 319.855223], [0.000000, 611.047376, 245.946766], [0.000000, 0.000000, 1.000000]], dtype=np.float64)
+dist = np.array([-0.027223, 0.098406, 0.002497, -0.001910, 0.000000], dtype=np.float64)
+
+def draw(img, imgpts):
+    corner = tuple(imgpts[0].ravel())
+    cv2.line(img, corner, tuple(imgpts[1].ravel()), (255,0,0), 5)
+    cv2.line(img, corner, tuple(imgpts[2].ravel()), (0,255,0), 5)
+    cv2.line(img, corner, tuple(imgpts[3].ravel()), (0,0,255), 5)
+    return img
+
+axis = np.float32([[0,0,0], [.1,0,0], [0,.1,0], [0,0,.1]]).reshape(-1,3)
+cv2.namedWindow('img', 1)
+cv2.waitKey(1)
+bridge = cv_bridge.CvBridge()
 
 img1 = cv2.imread('uofa.png',0)          # queryImage
-img2 = cv2.imread('uofa2.png',0)         # trainImage
+print(img1)
+cv2.waitKey(1000)
 
-print(type(img1))
-print(type(img2))
-# Initiate SIFT detector
-orb = cv2.ORB()
+def image_callback(msg):
+  global img1
 
-# find the keypoints and descriptors with SIFT
-kp1 = orb.detect(img1,None)
-kp1, des1 = orb.compute(img1,kp1)
-kp2 = orb.detect(img2,None)
-kp2, des2 = orb.compute(img2,kp2)
+  found=True
+  tvec=np.zeros((1,3))
+  rvec=np.zeros((1,3))
+#  print(msg)
 
-#FLANN_INDEX_KDTREE = np.array([0], dtype=np.float32)
-#index_params = {"algorithm" : FLANN_INDEX_KDTREE, "trees" : 5}
-#search_params = {"checks" : 50}
-#
-#flann = cv2.FlannBasedMatcher(index_params, search_params)
-#
-#matches = flann.knnMatch(des1,des2,k=2)
+  img2 = bridge.imgmsg_to_cv2(msg,desired_encoding='mono8')
+  img2 = img2.squeeze(axis=2)
+  print(img1.shape)
+  print(img2.shape)
+  orb = cv2.ORB()
 
-bf = cv2.BFMatcher(cv2.NORM_HAMMING)
-matches = bf.knnMatch(des1, des2, 2)
+  # find the keypoints and descriptors with SIFT
+  kp1 = orb.detect(img1,None)
+  kp1, des1 = orb.compute(img1,kp1)
+  kp2 = orb.detect(img2,None)
+  kp2, des2 = orb.compute(img2,kp2)
 
-# store all the good matches as per Lowe's ratio test.
-good = []
-for m,n in matches:
+  #FLANN_INDEX_KDTREE = np.array([0], dtype=np.float32)
+  #index_params = {"algorithm" : FLANN_INDEX_KDTREE, "trees" : 5}
+  #search_params = {"checks" : 50}
+  #
+  #flann = cv2.FlannBasedMatcher(index_params, search_params)
+  #
+  #matches = flann.knnMatch(des1,des2,k=2)
+
+  bf = cv2.BFMatcher(cv2.NORM_HAMMING)
+  matches = bf.knnMatch(des1, des2, 2)
+
+  # store all the good matches as per Lowe's ratio test.
+  good = []
+  for m,n in matches:
     if m.distance < 0.7*n.distance:
         good.append(m)
 
-if len(good)>MIN_MATCH_COUNT:
+  if len(good)>MIN_MATCH_COUNT:
     src_pts = np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
     dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
 
@@ -51,14 +77,31 @@ if len(good)>MIN_MATCH_COUNT:
 
     cv2.polylines(img2,[np.int32(dst)],True,255,3)
 
-else:
-    print "Not enough matches are found - %d/%d" % (len(good),MIN_MATCH_COUNT)
+  else:
+    #print "Not enough matches are found - %d/%d" % (len(good),MIN_MATCH_COUNT)
     matchesMask = None
 
-draw_params = dict(matchColor = (0,255,0), # draw matches in green color
+  draw_params = dict(matchColor = (0,255,0), # draw matches in green color
                    singlePointColor = None,
                    matchesMask = matchesMask, # draw only inliers
                    flags = 2)
 
-img3 = draw_matches(img1,kp1,img2,kp2,good)
-#plt.imshow(img3, 'gray'),plt.show()
+  #print(img1)
+  #print(img2)
+  img3 = draw_matches(img1,kp1,img2,kp2,good)
+  #plt.imshow(img3, 'gray'),plt.show()
+  
+  if found:
+  # project 3D points to image plane
+    imgpts, jac = cv2.projectPoints(axis, rvec, tvec, mtx, dist)
+    print("Position: " + str(tvec))
+    print("Rotation: " + str(rvec))
+    print(imgpts)
+    draw(img2, imgpts)
+
+MIN_MATCH_COUNT = 10
+
+rospy.init_node('axis_drawer')
+rospy.Subscriber('image', Image, image_callback)
+rospy.spin()
+# Initiate SIFT detector
