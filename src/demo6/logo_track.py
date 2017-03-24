@@ -18,7 +18,7 @@ def draw(img, imgpts):
     cv2.line(img, corner, tuple(imgpts[3].ravel()), (0,0,255), 5)
     return img
 
-axis = np.float32([[0,0,0], [.1,0,0], [0,.1,0], [0,0,.1]]).reshape(-1,3)
+axis = 100 * np.float32([[0,0,0], [1,0,0], [0,1,0], [0,0,1]]).reshape(-1,3)
 cv2.namedWindow('img', 1)
 cv2.waitKey(1)
 bridge = cv_bridge.CvBridge()
@@ -40,15 +40,18 @@ def image_callback(msg):
 
   img2 = bridge.imgmsg_to_cv2(msg,desired_encoding='mono8')
   img2 = img2.squeeze(axis=2)
-  print(img1.shape)
-  print(img2.shape)
+#  print(img1.shape)
+#  print(img2.shape)
 
   # find the keypoints and descriptors with SIFT
   kp2 = orb.detect(img2,None)
   kp2, des2 = orb.compute(img2,kp2)
 
   FLANN_INDEX_LSH = 6
-  index_params = {"algorithm" : FLANN_INDEX_LSH, "trees" : 5}
+  index_params = {"algorithm" : FLANN_INDEX_LSH,\
+                  "table_number" : 12,\
+                  "key_size" : 20,\
+                  "multi_probe_level" : 2}
   search_params = {"checks" : 100}
   
   flann = cv2.FlannBasedMatcher(index_params, search_params)
@@ -60,8 +63,11 @@ def image_callback(msg):
 
   # store all the good matches as per Lowe's ratio test.
   good = []
-  for m,n in matches:
-    if m.distance < 0.7*n.distance:
+  for i in range(len(matches)):
+    match = matches[i]
+    if len(match) == 2:
+      m,n = match
+      if m.distance < 0.7*n.distance:
         good.append(m)
 
 #  # use threshold distance and cross check instead of ratio test
@@ -80,7 +86,11 @@ def image_callback(msg):
     src_pts = np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
     dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
 
+    # make 3D definition of object
+    objp = np.float32(np.append(src_pts, np.zeros((src_pts.shape[0], src_pts.shape[1], 1)), axis=2))
+    
     M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
+    
     matchesMask = mask.ravel().tolist()
 
     h,w = img1.shape
@@ -89,8 +99,17 @@ def image_callback(msg):
 
     cv2.polylines(img2,[np.int32(dst)],True,255,3)
 
-    maskedMatches = [good[i] for i in range(len(good)) if matchesMask == 1]
+    rvec, tvec, inliers = cv2.solvePnPRansac(objp, dst_pts, mtx, dist)
 
+    imgpts, jac = cv2.projectPoints(axis, rvec, tvec, mtx, dist)
+    img4 = cv2.cvtColor(img2, cv2.COLOR_GRAY2BGR)
+    draw(img4,imgpts)
+    cv2.imshow('axes', img4)
+
+    maskedMatches = [good[i] for i in range(len(good)) if matchesMask[i] == 1]
+    
+    #print(matchesMask)
+    #print(maskedMatches)
     img3 = draw_matches(img1,kp1,img2,kp2,maskedMatches,color=255)
   else:
     #print "Not enough matches are found - %d/%d" % (len(good),MIN_MATCH_COUNT)
@@ -105,14 +124,6 @@ def image_callback(msg):
   #print(img1)
   #print(img2)
   #plt.imshow(img3, 'gray'),plt.show()
-  
-  if found:
-  # project 3D points to image plane
-    imgpts, jac = cv2.projectPoints(axis, rvec, tvec, mtx, dist)
-    print("Position: " + str(tvec))
-    print("Rotation: " + str(rvec))
-    print(imgpts)
-    draw(img2, imgpts)
 
 MIN_MATCH_COUNT = 10
 
