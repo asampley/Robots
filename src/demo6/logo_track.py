@@ -18,7 +18,7 @@ def draw(img, imgpts):
     cv2.line(img, corner, tuple(imgpts[3].ravel()), (0,0,255), 5)
     return img
 
-axis = 100 * np.float32([[0,0,0], [1,0,0], [0,1,0], [0,0,1]]).reshape(-1,3)
+axis = np.float32([[0,0,0], [.1,0,0], [0,.1,0], [0,0,.1]]).reshape(-1,3)
 cv2.namedWindow('img', 1)
 cv2.waitKey(1)
 bridge = cv_bridge.CvBridge()
@@ -87,7 +87,7 @@ def image_callback(msg):
     dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
 
     # make 3D definition of object
-    objp = np.float32(np.append(src_pts, np.zeros((src_pts.shape[0], src_pts.shape[1], 1)), axis=2))
+    objp = np.float32(np.append(0.2 / 425 * src_pts, np.zeros((src_pts.shape[0], src_pts.shape[1], 1)), axis=2))
     
     M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
     
@@ -100,6 +100,8 @@ def image_callback(msg):
     cv2.polylines(img2,[np.int32(dst)],True,255,3)
 
     rvec, tvec, inliers = cv2.solvePnPRansac(objp, dst_pts, mtx, dist)
+    print("Position: " + str(tvec))
+    print("Rotation: " + str(rvec))
 
     imgpts, jac = cv2.projectPoints(axis, rvec, tvec, mtx, dist)
     img4 = cv2.cvtColor(img2, cv2.COLOR_GRAY2BGR)
