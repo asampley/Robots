@@ -47,16 +47,16 @@ def image_callback(msg):
   kp2 = orb.detect(img2,None)
   kp2, des2 = orb.compute(img2,kp2)
 
-  #FLANN_INDEX_KDTREE = 0
-  #index_params = {"algorithm" : FLANN_INDEX_KDTREE, "trees" : 5}
-  #search_params = {"checks" : 50}
+  FLANN_INDEX_LSH = 6
+  index_params = {"algorithm" : FLANN_INDEX_LSH, "trees" : 5}
+  search_params = {"checks" : 100}
   
-  #flann = FlannBasedMatcher(index_params, search_params)
-  #
-  #matches = flann.knnMatch(des1,des2,k=2)
+  flann = cv2.FlannBasedMatcher(index_params, search_params)
+  
+  matches = flann.knnMatch(des1,des2,k=2)
 
-  bf = cv2.BFMatcher(cv2.NORM_HAMMING)
-  matches = bf.knnMatch(des1, des2, 2)
+  #bf = cv2.BFMatcher(cv2.NORM_HAMMING)
+  #matches = bf.knnMatch(des1, des2, 2)
 
   # store all the good matches as per Lowe's ratio test.
   good = []
