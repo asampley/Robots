@@ -34,8 +34,8 @@ def draw_matches(img1, kp1, img2, kp2, matches, color=None):
     new_img[0:img2.shape[0],img1.shape[1]:img1.shape[1]+img2.shape[1]] = img2
     
     # Draw lines between matches.  Make sure to offset kp coords in second image appropriately.
-    r = 15
-    thickness = 2
+    r = 3
+    thickness = 1
     if color:
         c = color
     for m in matches:

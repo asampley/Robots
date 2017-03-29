@@ -1,5 +1,5 @@
 <launch>
-	<node name="playback" pkg="rosbag" type="play" args="--clock demo6_logo.bag"/>
+	<node name="playback" pkg="rosbag" type="play" args="--loop --clock demo6_logo.bag"/>
 	<arg name="marker_size" default="4.4" />
 	<arg name="max_new_marker_error" default="0.08" />
 	<arg name="max_track_error" default="0.2" />
