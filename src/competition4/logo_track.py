@@ -93,8 +93,8 @@ def image_callback(msg):
     src_pts = np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
     dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
 
-    # make 3D definition of object
-    objp = np.float32(np.append(0.2 / img1.shape[1] * src_pts, np.zeros((src_pts.shape[0], src_pts.shape[1], 1)), axis=2))
+    # make 3D definition of object centered and scaled based on 20cm wide logo
+    objp = np.float32(np.append(0.2 / img1.shape[1] * (src_pts - img1.shape[1] / 2), np.zeros((src_pts.shape[0], src_pts.shape[1], 1)), axis=2)) 
     
     M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
     
