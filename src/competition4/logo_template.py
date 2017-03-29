@@ -71,7 +71,7 @@ def image_callback(msg):
 	imgp = np.array([[startX,startY],[startX,endY],[endX,startY],[endX,endY]], dtype=np.float32)
 
 	# draw a bounding box around the detected result and display the image
-	if maxVal > 0.125:
+	if maxVal > 0.15:
 		cv2.rectangle(image, (startX, startY), (endX, endY), (0, 0, 255), 2)
 		rvec, tvec, inliers = cv2.solvePnPRansac(objp, imgp, mtx, dist)
 		# project target in front of logo

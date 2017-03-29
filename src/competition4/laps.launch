@@ -76,7 +76,7 @@
 	</node>
 
 	<!-- Launch logo detection -->
-	<node name="logo_finder" pkg="competition4" type="logo_track.py" cwd="node">
+	<node name="logo_finder" pkg="competition4" type="logo_template.py" cwd="node">
 		<remap from="logo_pose" to="$(arg logo_pose)"/>
 		<remap from="image" to="camera/rgb/image_raw"/>
 	</node>
