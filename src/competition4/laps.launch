@@ -1,28 +1,5 @@
 <launch>
 	<include file="$(find turtlebot_bringup)/launch/minimal.launch"/>
-	<!--include file="$(find turtlebot_navigation)/launch/gmapping_demo.launch"/-->
-	<!--include file="$(find openni2_launch)/launch/openni2.launch"/-->
-	<!--include file="$(find turtlebot_stage)/launch/turtlebot_in_stage.launch"/-->
-
-
-
-	<!--include file="$(find turtlebot_rviz_launchers)/launch/view_navigation.launch"/-->
-
-    		<!-- <node pkg="joy" type="joy_node" name="joy"/> -->        
-
-	<!--node pkg="depthimage_to_laserscan" type="depthimage_to_laserscan" name="depthimage_to_laserscan">
-		<remap from="image" to="camera/depth/image_rect"/>
-	</node-->
-
-    		<!-- old way to launch nav 
-	<include file="$(find turtlebot_navigation)/launch/amcl_demo.launch">
-		<arg name="map_file" value="$(find competition3)/track.yaml"/>
-		<arg name="initial_pose_x" value="5.8438633289"/>
-		<arg name="initial_pose_y" value="5.37321792854"/>
-		<arg name="initial_pose_a" value="2.264"/>
-	</include>
-
-        -->
 
     	<!-- new way to launch nav -->
    	<include file="$(find turtlebot_bringup)/launch/3dsensor.launch">
@@ -37,6 +14,7 @@
 	<arg name="map_file" value="$(find competition3)/track.yaml"/>
     	<node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
 	
+	<!-- AMCL launch -->
 	<arg name="use_map_topic"  default="false"/>
 	<arg name="scan_topic"     default="scan"/>
     	<arg name="initial_pose_x" default="0.0"/>
@@ -88,10 +66,18 @@
 
     	<include file="$(find turtlebot_navigation)/launch/includes/move_base.launch.xml"/>
 
+	<arg name="logo_pose" default="logo_pose"/>
 
+	<!-- Launch supplier of positions to planner -->
 	<node pkg="competition4" type="patrol.py" name="patrol" output="screen">
-		<remap from="logo_point" to="logo_point"/>
+		<remap from="logo_point" to="$(arg logo_pose)"/>
 		<remap from="ar_point" to="ar_point"/>
 		<remap from="kobuki_sound" to="mobile_base/commands/sound"/>
+	</node>
+
+	<!-- Launch logo detection -->
+	<node name="logo_finder" pkg="competition4" type="logo_track.py" cwd="node">
+		<remap from="logo_pose" to="$(arg logo_pose)"/>
+		<remap from="image" to="camera/rgb/image_raw"/>
 	</node>
 </launch>
