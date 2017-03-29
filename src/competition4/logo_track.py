@@ -4,8 +4,8 @@ import numpy as np
 import cv2
 import cv_bridge
 import rospy
+import math
 from draw_matches import draw_matches
-from matplotlib import pyplot as plt
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Pose
 
@@ -56,19 +56,17 @@ def image_callback(msg):
   kp2 = orb.detect(img2,None)
   kp2, des2 = orb.compute(img2,kp2)
 
-  FLANN_INDEX_LSH = 6
-  index_params = {"algorithm" : FLANN_INDEX_LSH,\
-                  "table_number" : 30,\
-                  "key_size" : 20,\
-                  "multi_probe_level" : 2}
-  search_params = {"checks" : 1000}
-  
-  flann = cv2.FlannBasedMatcher(index_params, search_params)
-  
-  matches = flann.knnMatch(des1,des2,k=2)
+#  FLANN_INDEX_LSH = 6
+#  index_params = {"algorithm" : FLANN_INDEX_LSH,\
+#                  "table_number" : 30,\
+#                  "key_size" : 20,\
+#                  "multi_probe_level" : 2}
+#  search_params = {"checks" : 1000}
+#  flann = cv2.FlannBasedMatcher(index_params, search_params) 
+#  matches = flann.knnMatch(des1,des2,k=2)
 
-  #bf = cv2.BFMatcher(cv2.NORM_HAMMING)
-  #matches = bf.knnMatch(des1, des2, 2)
+  bf = cv2.BFMatcher(cv2.NORM_HAMMING)
+  matches = bf.knnMatch(des1, des2, 2)
 
   # store all the good matches as per Lowe's ratio test.
   good = []
@@ -109,27 +107,31 @@ def image_callback(msg):
     cv2.polylines(img2,[np.int32(dst)],True,255,3)
 
     rvec, tvec, inliers = cv2.solvePnPRansac(objp, dst_pts, mtx, dist)
-    print("Position: " + str(tvec))
-    print("Rotation: " + str(rvec))
+#    print("Position: " + str(tvec))
+#    print("Rotation: " + str(rvec))
 
     # project target in front of logo
     rvec_target, tvec_target, _,_,_,_,_,_,_,_ = cv2.composeRT(np.array([0,0,0], dtype=np.float32), np.array([0,0,-0.3], dtype=np.float32), rvec, tvec)
     print("target" + str(tvec_target))
     print("rotation" + str(rvec_target))
 
-    # publish target
-    logo_pose = RT2Pose(tvec_target, rvec_target)
-    logo_pose_pub.publish(logo_pose)
+    # reduce false positives by removing those that are far from straight at the camera
+    target_good = np.linalg.norm(rvec_target) < math.pi / 4
 
-    imgpts, jac = cv2.projectPoints(axis, rvec, tvec, mtx, dist)
-    img4 = cv2.cvtColor(img2, cv2.COLOR_GRAY2BGR)
-    draw(img4,imgpts)
-    
-    imgpt, jac = cv2.projectPoints(np.array([[0,0,0]], dtype=np.float32), rvec_target, tvec_target, mtx, dist)
-    cv2.circle(img4, tuple(imgpt.ravel()), 10, (255, 0, 255), -1)
-    
-    cv2.imshow('axes', img4)
+    if target_good:
+      
+      # publish target
+      logo_pose = RT2Pose(tvec_target, rvec_target)
+      logo_pose_pub.publish(logo_pose)
 
+      imgpts, jac = cv2.projectPoints(axis, rvec, tvec, mtx, dist)
+      img4 = cv2.cvtColor(img2, cv2.COLOR_GRAY2BGR)
+      draw(img4,imgpts)
+    
+      imgpt, jac = cv2.projectPoints(np.array([[0,0,0]], dtype=np.float32), rvec_target, tvec_target, mtx, dist)
+      cv2.circle(img4, tuple(imgpt.ravel()), 10, (255, 0, 255), -1)
+    
+      cv2.imshow('axes', img4)
     maskedMatches = [good[i] for i in range(len(good)) if matchesMask[i] == 1]
     
     #print(matchesMask)
@@ -144,10 +146,6 @@ def image_callback(msg):
   #                 singlePointColor = None,
   #                 matchesMask = matchesMask, # draw only inliers
   #                 flags = 2)
-
-  #print(img1)
-  #print(img2)
-  #plt.imshow(img3, 'gray'),plt.show()
 
 MIN_MATCH_COUNT = 10
 
