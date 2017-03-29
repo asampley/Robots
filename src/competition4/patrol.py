@@ -3,7 +3,7 @@
 import rospy
 import actionlib
 import sys
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Pose
 from kobuki_msgs.msg import Sound
 
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
@@ -15,14 +15,14 @@ waypoints = [
 	[(5.8438633289, 5.37321792854, 0.0), (0.0, 0.0, 0.905211098608, 0.424962194739)]
 ]
 gather_targets = False
-logo_point = None
+logo_pose = None
 logo_found = False
-ar_point = None
+ar_pose = None
 ar_found = False
 
-def goal_pose(pose):  
+def goal_pose(pose, frame_id):
 	goal_pose = MoveBaseGoal()
-	goal_pose.target_pose.header.frame_id = 'map'
+	goal_pose.target_pose.header.frame_id = frame_id
 	goal_pose.target_pose.pose.position.x = pose[0][0]
 	goal_pose.target_pose.pose.position.y = pose[0][1]
 	goal_pose.target_pose.pose.position.z = pose[0][2]
@@ -33,22 +33,24 @@ def goal_pose(pose):
 
 	return goal_pose
 
-def logo_point_callback(msg):
-	global gather_targets, logo_found, logo_point
+def logo_pose_callback(msg):
+	global gather_targets, logo_found, logo_pose
 	if gather_targets:
 		logo_found = True
-		logo_point = msg
+		logo_pose = msg
 
-def ar_point_callback(msg):
-	global gather_targets, ar_found, ar_point
+def ar_pose_callback(msg):
+	global gather_targets, ar_found, ar_pose
 	if gather_targets:
 		ar_found = True
-		ar_point = msg
+		ar_pose = msg
 
 
 if __name__ == '__main__':
 	NUM_LAPS = 1
 	SEARCH_PERIOD = 1
+	WAYPOINT_TF_FRAME = 'map'
+	DOCKING_TF_FRAME = 'base_footprint'
 
 	LOGO_SOUND = Sound()
 	AR_SOUND = Sound()
@@ -60,8 +62,8 @@ if __name__ == '__main__':
 	rospy.init_node('patrol')
 
 	sound_pub = rospy.Publisher('kobuki_sound', Sound, queue_size=1)
-	logo_sub = rospy.Subscriber('logo_point', Point, logo_point_callback)
-	ar_sub = rospy.Subscriber('ar_point', Point, ar_point_callback)
+	logo_sub = rospy.Subscriber('logo_point', Pose, logo_pose_callback)
+	ar_sub = rospy.Subscriber('ar_point', Pose, ar_pose_callback)
 
 	client = actionlib.SimpleActionClient('move_base', MoveBaseAction)  
 	client.wait_for_server()
@@ -69,10 +71,12 @@ if __name__ == '__main__':
 	lap_counter = 0
  
 	while (lap_counter < NUM_LAPS):
+		print("Beginning lap " + str(lap_counter))
 		for pose in waypoints:
+			print("Moving to next waypoint")
 			# move to next waypoint
 			gather_targets = False
-			goal = goal_pose(pose)
+			goal = goal_pose(pose, WAYPOINT_TF_FRAME)
 			client.send_goal(goal)
 			client.wait_for_result()
 			
@@ -84,10 +88,15 @@ if __name__ == '__main__':
 			rospy.sleep(SEARCH_PERIOD)
 			
 			if logo_found:
+				print("Docking with logo")
+				goal = goal_pose(logo_pose, DOCKING_TF_FRAME)
 				sound_pub.publish(LOGO_SOUND)
 			elif ar_found:
+				print("Docking with AR code")
+				goal = goal_pose(ar_pose, DOCKING_TF_FRAME)
 				sound_pub.publish(AR_SOUND)
 			logo_found = False
 			ar_found = False
 
 		lap_counter = lap_counter + 1
+	print("Completed all " + str(NUM_LAPS) + " laps")
