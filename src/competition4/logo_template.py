@@ -16,6 +16,10 @@ def RT2Pose(tvec, rvec):
         pose.position.x = tvec[0]
         pose.position.y = tvec[1]
         pose.position.z = tvec[2]
+	pose.orientation.x = 0
+	pose.orientation.y = 0
+	pose.orientation.z = 1
+	pose.orientation.w = 1
 
         return pose
 
