@@ -82,7 +82,7 @@
 		<remap from="template_pose" to="$(arg ar_pose)"/>
 		<remap from="image" to="camera/rgb/image_raw"/>
 		<param name="template" value="ar.png"/>
-		<param name="threshold" value="0.3"/>
+		<param name="threshold" value="0.35"/>
 	</node>
 
 	<!-- Launch logo detection -->
