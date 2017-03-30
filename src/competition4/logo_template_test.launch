@@ -15,7 +15,7 @@
         <node name="ar_finder" pkg="competition4" type="logo_template.py" cwd="node">
                 <remap from="template_pose" to="$(arg ar_pose)"/>
                 <remap from="image" to="camera/rgb/image_raw"/>
-                <param name="template" value="ar.png"/>
+                <param name="template" value="ar_s.png"/>
                 <param name="threshold" value="0.35"/>
         </node>
 
@@ -23,7 +23,7 @@
         <node name="logo_finder" pkg="competition4" type="logo_template.py" cwd="node">
                 <remap from="template_pose" to="$(arg logo_pose)"/>
                 <remap from="image" to="camera/rgb/image_raw"/>
-                <param name="template" value="uofa.png"/>
+                <param name="template" value="uofa_s.png"/>
                 <param name="threshold" value="0.2"/>
         </node>
 
