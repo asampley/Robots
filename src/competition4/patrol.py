@@ -90,6 +90,7 @@ def ar_pose_callback(msg):
 if __name__ == '__main__':
 	NUM_LAPS = 1
 	SEARCH_PERIOD = 1
+	#SEARCH_PERIOD = 2
 	WAYPOINT_TF_FRAME = 'map'
 	DOCKING_TF_FRAME = 'base_footprint'
 
@@ -130,15 +131,19 @@ if __name__ == '__main__':
 			if logo_found:
 				print("Docking with logo")
 				goal = goal_pose(logo_pose, DOCKING_TF_FRAME)
+				sound_pub.publish(LOGO_SOUND)
+				rospy.sleep(3)
 				client.send_goal(goal)
 				client.wait_for_result()
-				sound_pub.publish(LOGO_SOUND)
+				rospy.sleep(3)
 			elif ar_found:
 				print("Docking with AR code")
 				goal = goal_pose(ar_pose, DOCKING_TF_FRAME)
+				sound_pub.publish(AR_SOUND)
+				rospy.sleep(3)
 				client.send_goal(goal)
 				client.wait_for_result()
-				sound_pub.publish(AR_SOUND)
+				rospy.sleep(3)
 			logo_found = False
 			ar_found = False
 
