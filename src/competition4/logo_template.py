@@ -11,6 +11,11 @@ import cv_bridge
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Pose
 
+rospy.init_node('template_match')
+
+threshold = rospy.get_param('~threshold', 0.2)
+templatePath = rospy.get_param('~template', 'uofa.png')
+
 def RT2Pose(tvec, rvec):
 	pose = Pose()
 	pose.position.x = tvec[0]
@@ -28,18 +33,15 @@ def image_callback(msg):
 	global bridge
 	global proctime
 
-
-
 	#if proctime is None or proctime + rospy.Duration.from_sec(0.5) < rospy.get_rostime(): 
-	if proctime is None or proctime + rospy.Duration.from_sec(0.5)  < rospy.get_rostime(): 
-
-		print(proctime)
-	# load the image, convert it to grayscale, and initialize the
-	# bookkeeping variable to keep track of the matched region
+	if proctime is None or proctime + rospy.Duration.from_sec(0.5)  < rospy.get_rostime():
+		# load the image, convert it to grayscale, and initialize the
+		# bookkeeping variable to keep track of the matched region
 		image = bridge.imgmsg_to_cv2(msg,desired_encoding='bgr8')
-		image = imutils.resize(image, width = int(gray.shape[1] * 0.5))
-
+		#image = imutils.resize(image, width = int(gray.shape[1] * 0.5))
+		#print(image)
 		gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+		#print(gray)
 		found = None
 	 
 		# loop over the scales of the image
@@ -52,9 +54,10 @@ def image_callback(msg):
 			# if the resized image is smaller than the template, then break
 			# from the loop
 			if resized.shape[0] < tH or resized.shape[1] < tW:
-				#print("Image " + str(resized.shape) + " smaller than template " + str((tH, tW)))
+				print("Image " + str(resized.shape) + " smaller than template " + str((tH, tW)))
 				break
-		
+			else:
+				print("Doing image of size " + str(resized.shape))	
 			# detect edges in the resized, grayscale image and apply template
 			# matching to find the template in the image
 			edged = cv2.Canny(resized, 50, 200)
@@ -62,12 +65,12 @@ def image_callback(msg):
 			(_, maxVal, _, maxLoc) = cv2.minMaxLoc(result)
 			#print(maxVal)
 		 
-	#		# draw a bounding box around the detected region
-	#		clone = np.dstack([edged, edged, edged])
-	#		cv2.rectangle(clone, (maxLoc[0], maxLoc[1]),
-	#			(maxLoc[0] + tW, maxLoc[1] + tH), (0, 0, 255), 2)
-	#		cv2.imshow("Visualize", clone)
-	#		cv2.waitKey(0)
+			#		# draw a bounding box around the detected region
+			#		clone = np.dstack([edged, edged, edged])
+			#		cv2.rectangle(clone, (maxLoc[0], maxLoc[1]),
+			#			(maxLoc[0] + tW, maxLoc[1] + tH), (0, 0, 255), 2)
+			#		cv2.imshow("Visualize", clone)
+			#		cv2.waitKey(0)
 		
 			# if we have found a new maximum correlation value, then ipdate
 			# the bookkeeping variable
@@ -84,7 +87,7 @@ def image_callback(msg):
 		imgp = np.array([[startX,startY],[startX,endY],[endX,startY],[endX,endY]], dtype=np.float32)
 
 		# draw a bounding box around the detected result and display the image
-		if maxVal > 0.15:
+		if maxVal > threshold:
 			cv2.rectangle(image, (startX, startY), (endX, endY), (0, 0, 255), 2)
 			rvec, tvec, inliers = cv2.solvePnPRansac(objp, imgp, mtx, dist)
 			# project target in front of logo
@@ -97,7 +100,10 @@ def image_callback(msg):
 			
 			logo_pose = RT2Pose(tvec_target, rvec_target)
 			logo_pose_pub.publish(logo_pose)
-		cv2.imshow("Image", image)
+		else:
+			print("Cutting target due to max val (" + str(maxVal) + ") being lower than threshold (" + str(threshold) + ")")
+			print(maxVal > threshold)
+		cv2.imshow('Image ' + templatePath, image)
 		cv2.waitKey(1)
 		proctime = rospy.get_rostime()
 
@@ -112,15 +118,13 @@ bridge = cv_bridge.CvBridge()
 
 proctime = None
 # load the image image, convert it to grayscale, and detect edges
-template = cv2.imread('uofa.png')
+template = cv2.imread(templatePath)
 template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
 template = cv2.Canny(template, 50, 200)
 (tH, tW) = template.shape[:2]
-cv2.imshow("Template", template)
-
-rospy.init_node('logo_template_match')
+cv2.imshow('Template ' + templatePath, template)
 
 rospy.Subscriber('image', Image, image_callback)
-logo_pose_pub = rospy.Publisher('logo_pose', Pose, queue_size = 1)
+logo_pose_pub = rospy.Publisher('template_pose', Pose, queue_size = 1)
 rospy.spin()
 

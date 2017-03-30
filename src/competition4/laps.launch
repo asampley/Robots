@@ -67,17 +67,29 @@
     	<include file="$(find turtlebot_navigation)/launch/includes/move_base.launch.xml"/>
 
 	<arg name="logo_pose" default="logo_pose"/>
+	<arg name="ar_pose" default="ar_pose"/>
 
 	<!-- Launch supplier of positions to planner -->
 	<node pkg="competition4" type="patrol.py" name="patrol" output="screen">
 		<remap from="logo_point" to="$(arg logo_pose)"/>
-		<remap from="ar_point" to="ar_point"/>
+		<remap from="ar_point" to="$(arg ar_pose)"/>
 		<remap from="kobuki_sound" to="mobile_base/commands/sound"/>
+		<param name="dock" value="false"/>
+	</node>
+
+	<!-- Launch ar detection -->
+	<node name="ar_finder" pkg="competition4" type="logo_template.py" cwd="node">
+		<remap from="template_pose" to="$(arg ar_pose)"/>
+		<remap from="image" to="camera/rgb/image_raw"/>
+		<param name="template" value="ar.png"/>
+		<param name="threshold" value="0.3"/>
 	</node>
 
 	<!-- Launch logo detection -->
 	<node name="logo_finder" pkg="competition4" type="logo_template.py" cwd="node">
-		<remap from="logo_pose" to="$(arg logo_pose)"/>
+		<remap from="template_pose" to="$(arg logo_pose)"/>
 		<remap from="image" to="camera/rgb/image_raw"/>
+		<param name="template" value="uofa.png"/>
+		<param name="threshold" value="0.2"/>
 	</node>
 </launch>

@@ -8,6 +8,10 @@ from kobuki_msgs.msg import Sound
 
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 
+rospy.init_node('patrol')
+
+dock = rospy.get_param('~dock', False)
+
 waypoints = [
 [(-0.119950234018,-0.907901944962,0.0),(0.0,0.0,-0.384930863174,0.922945410399)],
 [(-0.0599337622866,-1.01160645021,0.0),(0.0,0.0,-0.904601712743,0.426257834299)],
@@ -101,8 +105,6 @@ if __name__ == '__main__':
 	AR_SOUND.value = 1
 	WAYPOINT_SOUND.value = 3
 
-	rospy.init_node('patrol')
-
 	sound_pub = rospy.Publisher('kobuki_sound', Sound, queue_size=1)
 	logo_sub = rospy.Subscriber('logo_point', Pose, logo_pose_callback)
 	ar_sub = rospy.Subscriber('ar_point', Pose, ar_pose_callback)
@@ -129,21 +131,27 @@ if __name__ == '__main__':
 			rospy.sleep(SEARCH_PERIOD)
 			gather_targets = False
 			if logo_found:
-				print("Docking with logo")
-				goal = goal_pose(logo_pose, DOCKING_TF_FRAME)
 				sound_pub.publish(LOGO_SOUND)
 				rospy.sleep(3)
-				client.send_goal(goal)
-				client.wait_for_result()
-				rospy.sleep(3)
+				if dock:
+					print("Docking with logo")
+					goal = goal_pose(logo_pose, DOCKING_TF_FRAME)
+					client.send_goal(goal)
+					client.wait_for_result()
+					rospy.sleep(3)
+				else:
+					print("Found logo")
 			elif ar_found:
-				print("Docking with AR code")
-				goal = goal_pose(ar_pose, DOCKING_TF_FRAME)
 				sound_pub.publish(AR_SOUND)
 				rospy.sleep(3)
-				client.send_goal(goal)
-				client.wait_for_result()
-				rospy.sleep(3)
+				if dock:
+					print("Docking with AR code")
+					goal = goal_pose(ar_pose, DOCKING_TF_FRAME)
+					client.send_goal(goal)
+					client.wait_for_result()
+					rospy.sleep(3)
+				else:
+					print("Found AR code")
 			logo_found = False
 			ar_found = False
 
