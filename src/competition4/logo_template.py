@@ -38,7 +38,7 @@ def image_callback(msg):
 		# load the image, convert it to grayscale, and initialize the
 		# bookkeeping variable to keep track of the matched region
 		image = bridge.imgmsg_to_cv2(msg,desired_encoding='bgr8')
-		#image = imutils.resize(image, width = int(gray.shape[1] * 0.5))
+		image = imutils.resize(image, width = int(image.shape[1] * 0.5))
 		#print(image)
 		gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 		#print(gray)
