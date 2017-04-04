@@ -1,0 +1,31 @@
+<launch>
+	<arg name="ar_pose" default="ar_pose"/>
+	<arg name="logo_pose" default="logo_pose"/>
+
+	<!-- Launch 3d camera -->
+        <include file="$(find turtlebot_bringup)/launch/3dsensor.launch">
+                <arg name="rgb_processing" value="false" />
+                <arg name="depth_registration" value="false" />
+                <arg name="depth_processing" value="false" />
+
+                <arg name="scan_topic" value="/scan" />
+        </include>
+
+	<!-- Launch ar detection -->
+        <node name="ar_finder" pkg="competition4" type="logo_template.py" cwd="node">
+                <remap from="template_pose" to="$(arg ar_pose)"/>
+                <remap from="image" to="camera/rgb/image_raw"/>
+                <param name="template" value="ar_s.png"/>
+                <param name="threshold" value="0.35"/>
+        </node>
+
+        <!-- Launch logo detection -->
+        <node name="logo_finder" pkg="competition4" type="logo_template.py" cwd="node">
+                <remap from="template_pose" to="$(arg logo_pose)"/>
+                <remap from="image" to="camera/rgb/image_raw"/>
+                <param name="template" value="ua_s.png"/>
+                <param name="threshold" value="0.2"/>
+        </node>
+
+	<node name="usb_cam" pkg="usb_cam" type="usb_cam_node"/>
+</launch>
