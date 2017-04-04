@@ -70,7 +70,7 @@
 	<arg name="ar_pose" default="ar_pose"/>
 
 	<!-- Launch supplier of positions to planner -->
-	<node pkg="competition4" type="patrol.py" name="patrol" output="screen">
+	<node pkg="competition5" type="patrol.py" name="patrol" output="screen">
 		<remap from="logo_point" to="$(arg logo_pose)"/>
 		<remap from="ar_point" to="$(arg ar_pose)"/>
 		<remap from="kobuki_sound" to="mobile_base/commands/sound"/>
@@ -78,7 +78,7 @@
 	</node>
 
 	<!-- Launch ar detection -->
-	<node name="ar_finder" pkg="competition4" type="logo_template.py" cwd="node">
+	<node name="ar_finder" pkg="competition5" type="logo_template.py" cwd="node">
 		<remap from="template_pose" to="$(arg ar_pose)"/>
 		<remap from="image" to="camera/rgb/image_raw"/>
 		<param name="template" value="ar_s.png"/>
@@ -86,7 +86,7 @@
 	</node>
 
 	<!-- Launch logo detection -->
-	<node name="logo_finder" pkg="competition4" type="logo_template.py" cwd="node">
+	<node name="logo_finder" pkg="competition5" type="logo_template.py" cwd="node">
 		<remap from="template_pose" to="$(arg logo_pose)"/>
 		<remap from="image" to="camera/rgb/image_raw"/>
 		<param name="template" value="ua_s.png"/>

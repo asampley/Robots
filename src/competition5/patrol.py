@@ -91,6 +91,7 @@ def ar_pose_callback(msg):
 		ar_pose = msg
 
 def global_localize():
+	rospy.wait_for_service('global_localization')
 	localize_service = rospy.ServiceProxy('global_localization', Empty)
 
 	try:
@@ -124,18 +125,24 @@ if __name__ == '__main__':
 	global_localize()
 	while (lap_counter < NUM_LAPS):
 		print("Beginning lap " + str(lap_counter))
-		for wp in waypoints:
-			print("Moving to next waypoint")
+		i = 0
+		while i < len(waypoints):
+			wp = waypoints[i]
+
+			print("Moving to waypoint " + str(i))
 			# move to next waypoint
 			goal = goal_pose_waypoint(wp, WAYPOINT_TF_FRAME)
 			client.send_goal(goal)
+			#print("Sent waypoint")
 			client.wait_for_result()
 
-			if(client.get_state() == actionlib.simple_action_client.GoalStatus.SUCCEEDED):
+			#print("Processing result")
+			if (client.get_state() == actionlib.simple_action_client.GoalStatus.SUCCEEDED):
 				print("Success")
 			else:
 				print("Failure, relocalizing")
 				global_localize()
+				continue
 			
 			# play sound to indicate reaching of a waypoint
 			sound_pub.publish(WAYPOINT_SOUND)
@@ -168,6 +175,8 @@ if __name__ == '__main__':
 					print("Found AR code")
 			logo_found = False
 			ar_found = False
+
+			i = i + 1
 
 		lap_counter = lap_counter + 1
 	print("Completed all " + str(NUM_LAPS) + " laps")
