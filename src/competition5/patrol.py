@@ -3,7 +3,8 @@
 import rospy
 import actionlib
 import sys
-from geometry_msgs.msg import Pose
+import numpy as np
+from geometry_msgs.msg import Pose, Twist
 from kobuki_msgs.msg import Sound
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from std_srvs.srv import Empty
@@ -99,6 +100,38 @@ def global_localize():
 	except:
 		print("Service did not process request")
 
+def move_direct(pose):
+	tvec_target = np.array([pose.position.x, pose.position.y, pose.position.z], dtype=np.float32)
+	print("Moving to target")
+	print(tvec_target)
+
+	# first, turn to face the target
+        rot_radians  = -(np.arctan(tvec_target[0] / tvec_target[2]))
+        rot_velocity = np.sign(rot_radians) * 0.8
+        rot_period   = rot_radians / rot_velocity
+        rot_twist = Twist()
+        rot_twist.angular.z = rot_velocity
+        # second, move towards the checkerboard for .25m or within .1m
+        move_meters = np.linalg.norm(tvec_target[np.array([0,2])])
+        #print(np.linalg.norm(tvec_target[np.array([0,2])]))
+        move_velocity = 0.2
+        move_period   = move_meters / move_velocity
+        move_twist = Twist()
+        move_twist.linear.x = move_velocity
+	
+	print("Rotation" + str(rot_twist))
+	print("RDuration" + str(rot_period))
+	print("Forward" + str(move_twist))
+	print("PDuration" + str(move_period))
+
+	cmd_vel_pub.publish(rot_twist)
+	rospy.sleep(rot_period)
+	cmd_vel_pub.publish(move_twist)
+	rospy.sleep(move_period)
+	cmd_vel_pub.publish(Twist())
+	
+	
+
 if __name__ == '__main__':
 	NUM_LAPS = 2
 	SEARCH_PERIOD = 1
@@ -116,6 +149,7 @@ if __name__ == '__main__':
 	sound_pub = rospy.Publisher('kobuki_sound', Sound, queue_size=1)
 	logo_sub = rospy.Subscriber('logo_point', Pose, logo_pose_callback)
 	ar_sub = rospy.Subscriber('ar_point', Pose, ar_pose_callback)
+	cmd_vel_pub = rospy.Publisher('twist_out',Twist, queue_size=1)
 
 	client = actionlib.SimpleActionClient('move_base', MoveBaseAction)  
 	client.wait_for_server()
@@ -140,8 +174,9 @@ if __name__ == '__main__':
 			if (client.get_state() == actionlib.simple_action_client.GoalStatus.SUCCEEDED):
 				print("Success")
 			else:
-				print("Failure, relocalizing")
-				global_localize()
+				#print("Failure, relocalizing")
+				#global_localize()
+				print("Failure")
 				continue
 			
 			# play sound to indicate reaching of a waypoint
@@ -156,9 +191,7 @@ if __name__ == '__main__':
 				rospy.sleep(3)
 				if dock:
 					print("Docking with logo")
-					goal = goal_pose(logo_pose, DOCKING_TF_FRAME)
-					client.send_goal(goal)
-					client.wait_for_result()
+					move_direct(logo_pose)
 					rospy.sleep(3)
 				else:
 					print("Found logo")
@@ -167,9 +200,7 @@ if __name__ == '__main__':
 				rospy.sleep(3)
 				if dock:
 					print("Docking with AR code")
-					goal = goal_pose(ar_pose, DOCKING_TF_FRAME)
-					client.send_goal(goal)
-					client.wait_for_result()
+					move_direct(ar_pose)
 					rospy.sleep(3)
 				else:
 					print("Found AR code")

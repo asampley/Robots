@@ -75,6 +75,7 @@
 		<remap from="logo_point" to="$(arg logo_pose)"/>
 		<remap from="ar_point" to="$(arg ar_pose)"/>
 		<remap from="kobuki_sound" to="mobile_base/commands/sound"/>
+		<remap from="twist_out" to="cmd_vel_mux/input/teleop"/>
 		<param name="dock" value="true"/>
 	</node>
 
