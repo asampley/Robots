@@ -124,10 +124,16 @@ def move_direct(pose):
 	print("Forward" + str(move_twist))
 	print("PDuration" + str(move_period))
 
-	cmd_vel_pub.publish(rot_twist)
-	rospy.sleep(rot_period)
-	cmd_vel_pub.publish(move_twist)
-	rospy.sleep(move_period)
+	start_time = rospy.get_rostime()
+	duration = rospy.Duration.from_sec(rot_period)
+	while start_time + duration > rospy.get_rostime():
+		cmd_vel_pub.publish(rot_twist)
+	
+	start_time = rospy.get_rostime()
+	duration = rospy.Duration.from_sec(move_period)
+	while start_time + duration > rospy.get_rostime():
+		cmd_vel_pub.publish(move_twist)
+
 	cmd_vel_pub.publish(Twist())
 	
 	
