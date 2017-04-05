@@ -75,7 +75,7 @@
 		<remap from="logo_point" to="$(arg logo_pose)"/>
 		<remap from="ar_point" to="$(arg ar_pose)"/>
 		<remap from="kobuki_sound" to="mobile_base/commands/sound"/>
-		<param name="dock" value="false"/>
+		<param name="dock" value="true"/>
 	</node>
 
 	<!-- Launch ar detection -->

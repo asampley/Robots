@@ -7,6 +7,7 @@ import imutils
 import glob
 import cv2
 import rospy
+import math
 import cv_bridge
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Pose
@@ -18,12 +19,12 @@ templatePath = rospy.get_param('~template', 'uofa.png')
 
 def RT2Pose(tvec, rvec):
 	pose = Pose()
-	pose.position.x = tvec[0]
+	pose.position.x = tvec[2]
 	pose.position.y = tvec[1]
-	pose.position.z = tvec[2]
+	pose.position.z = tvec[0]
 	pose.orientation.x = 0
 	pose.orientation.y = 0
-	pose.orientation.z = 1
+	pose.orientation.z = math.PI
 	pose.orientation.w = 1
 
 	return pose
