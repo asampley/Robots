@@ -24,7 +24,7 @@ def RT2Pose(tvec, rvec):
 	pose.position.z = tvec[0]
 	pose.orientation.x = 0
 	pose.orientation.y = 0
-	pose.orientation.z = math.PI
+	pose.orientation.z = math.pi
 	pose.orientation.w = 1
 
 	return pose
@@ -90,7 +90,7 @@ def image_callback(msg):
 		# draw a bounding box around the detected result and display the image
 		if maxVal > threshold:
 			cv2.rectangle(image, (startX, startY), (endX, endY), (0, 0, 255), 2)
-			rvec, tvec, inliers = cv2.solvePnPRansac(objp, imgp, mtx, dist)
+			rvec, tvec, inliers = cv2.solvePnPRansac(objp * r, imgp, mtx, dist)
 			# project target in front of logo
 			rvec_target, tvec_target, _,_,_,_,_,_,_,_ = cv2.composeRT(np.array([0,0,0], dtype=np.float32), np.array([0,0,-0.3], dtype=np.float32), rvec, tvec)
 			print("target" + str(tvec_target))
