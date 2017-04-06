@@ -128,6 +128,17 @@ def move_direct(pose):
 	duration = rospy.Duration.from_sec(rot_period)
 	while start_time + duration > rospy.get_rostime():
 		cmd_vel_pub.publish(rot_twist)
+
+	#######################################
+	#back docking
+	'''
+	start_time = rospy.get_rostime()
+	duration = rospy.Duration.from_sec(np.pi / rot_velocity)
+	while start_time + duration > rospy.get_rostime()
+		cmd_vel_pub.publish(rot_twist)
+	move_twist.linear.x = -move_velocity
+	'''
+	#######################################
 	
 	start_time = rospy.get_rostime()
 	duration = rospy.Duration.from_sec(move_period)
