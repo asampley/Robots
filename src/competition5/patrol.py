@@ -6,7 +6,7 @@ import sys
 import numpy as np
 import math
 from geometry_msgs.msg import Pose, Twist
-from kobuki_msgs.msg import Sound
+from kobuki_msgs.msg import Sound, Led
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from std_srvs.srv import Empty
 
@@ -147,9 +147,13 @@ def move_direct(pose):
 	for t,d in twist_and_durations:
 		start_time = rospy.get_rostime()
 		duration = rospy.Duration.from_sec(d)
+                #this is hacky
+		if(d == pause_period ):
+			light_pub_1.publish(led.ORANGE)
 		while start_time + duration > rospy.get_rostime():
 			cmd_vel_pub.publish(t)
 
+		light_pub_1.publish(led.BLACK)
 		#######################################
 		#back docking
 		'''
@@ -178,8 +182,11 @@ if __name__ == '__main__':
 	LOGO_SOUND.value = 0
 	AR_SOUND.value = 1
 	WAYPOINT_SOUND.value = 3
+        led = Led()
 
 	sound_pub = rospy.Publisher('kobuki_sound', Sound, queue_size=1)
+	light_pub_1 = rospy.Publisher('/mobile_base/commands/led1', Led, queue_size=1)
+	light_pub_2 = rospy.Publisher('/mobile_base/commands/led2', Led, queue_size=1)
 	logo_sub = rospy.Subscriber('logo_point', Pose, logo_pose_callback)
 	ar_sub = rospy.Subscriber('ar_point', Pose, ar_pose_callback)
 	cmd_vel_pub = rospy.Publisher('twist_out',Twist, queue_size=1)
@@ -188,8 +195,13 @@ if __name__ == '__main__':
 	client.wait_for_server()
  
 	lap_counter = 0
- 
+        fail_counter = 0
+
+	light_pub_1.publish(led.RED)
+	light_pub_2.publish(led.RED)
 	global_localize()
+	light_pub_1.publish(led.BLACK)
+	light_pub_2.publish(led.BLACK)
 	while (lap_counter < NUM_LAPS):
 		print("Beginning lap " + str(lap_counter))
 		i = 0
@@ -206,10 +218,14 @@ if __name__ == '__main__':
 			#print("Processing result")
 			if (client.get_state() == actionlib.simple_action_client.GoalStatus.SUCCEEDED):
 				print("Success")
+				fail_counter = 0
+				light_pub_1.publish(led.BLACK)
+				light_pub_2.publish(led.BLACK)
 			else:
+				light_pub_1.publish(led.RED)
+				light_pub_2.publish(led.RED)
 				#print("Failure, relocalizing")
 				#global_localize()
-				#print("Failure")
 				continue
 			
 			# play sound to indicate reaching of a waypoint
@@ -221,20 +237,24 @@ if __name__ == '__main__':
 			gather_targets = False
 			if logo_found:
 				sound_pub.publish(LOGO_SOUND)
-				rospy.sleep(3)
+				light_pub_1.publish(led.ORANGE)
+				rospy.sleep(1)
+				light_pub_1.publish(led.BLACK)
 				if dock:
 					print("Docking with logo")
 					move_direct(logo_pose)
-					rospy.sleep(3)
+					rospy.sleep(1)
 				else:
 					print("Found logo")
 			elif ar_found:
 				sound_pub.publish(AR_SOUND)
-				rospy.sleep(3)
+				light_pub_1.publish(led.ORANGE)
+				rospy.sleep(1)
+				light_pub_1.publish(led.BLACK)
 				if dock:
 					print("Docking with AR code")
 					move_direct(ar_pose)
-					rospy.sleep(3)
+					rospy.sleep(1)
 				else:
 					print("Found AR code")
 			logo_found = False
