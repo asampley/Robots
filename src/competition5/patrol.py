@@ -17,7 +17,7 @@ dock = rospy.get_param('~dock', False)
 waypoints = [
 [(-0.119950234018,-0.907901944962,0.0),(0.0,0.0,-0.384930863174,0.922945410399)],
 [(-0.0599337622866,-1.01160645021,0.0),(0.0,0.0,-0.904601712743,0.426257834299)],
-[(-0.742077092604,-0.580275540601,0.0),(0.0,0.0,-0.924443138298,0.381319923496)],
+[(-0.742077092604,-0.580275540601,0.0),(0.0,0.0,-0.904443138298,0.381319923496)],
 [(-1.34421700246,-0.158327525501,0.0),(0.0,0.0,-0.913949694425,0.405827495446)],
 [(-1.91672861406,0.256386610932,0.0),(0.0,0.0,-0.87634205007,0.481689330667)],
 [(-2.58617071639,0.76624820661,0.0),(0.0,0.0,-0.920137442443,0.391595565622)],
@@ -103,10 +103,10 @@ def global_localize():
 
 def move_direct(pose):
 	tvec_target = np.array([pose.position.x, pose.position.y, pose.position.z], dtype=np.float32)
-	print("Moving to target")
-	print(tvec_target)
+	#print("Moving to target")
+	#print(tvec_target)
 
-	rot_speed = 0.8
+	rot_speed = 0.6
 	move_speed = 0.2
 	pause_period = 1
 
@@ -124,8 +124,9 @@ def move_direct(pose):
         move_twist = Twist()
         move_twist.linear.x = move_velocity
 
-	_180_radians = math.pi
-	_180_velocity = np.sign(_180_radians) * rot_speed
+	_180_radians = math.pi*1.25
+	#changed from rot_speed to 0.8
+	_180_velocity = np.sign(_180_radians) * 2.4
 	_180_period = _180_radians / _180_velocity
 	_180_twist = Twist()
 	_180_twist.angular.z = _180_velocity
@@ -195,7 +196,7 @@ if __name__ == '__main__':
 		while i < len(waypoints):
 			wp = waypoints[i]
 
-			print("Moving to waypoint " + str(i))
+			#print("Moving to waypoint " + str(i))
 			# move to next waypoint
 			goal = goal_pose_waypoint(wp, WAYPOINT_TF_FRAME)
 			client.send_goal(goal)
@@ -208,7 +209,7 @@ if __name__ == '__main__':
 			else:
 				#print("Failure, relocalizing")
 				#global_localize()
-				print("Failure")
+				#print("Failure")
 				continue
 			
 			# play sound to indicate reaching of a waypoint
