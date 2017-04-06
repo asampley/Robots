@@ -68,9 +68,12 @@
 		<param name="initial_pose_a"            value="$(arg initial_pose_a)"/>
 		<remap from="scan"                      to="$(arg scan_topic)"/>
 
-		<param name="initial_cov_xx"              value="20.0"/>
+		<!-- <param name="initial_cov_xx"              value="20.0"/>
 		<param name="initial_cov_yy"              value="20.0"/>
-		<param name="initial_cov_aa"              value="40.0"/>
+		<param name="initial_cov_aa"              value="40.0"/> -->
+		<param name="amcl/initial_cov_xx" value="15.0"/>
+  		<param name="amcl/initial_cov_yy" value="15.0"/>
+		<param name="amcl/initial_cov_aa" value="3.14"/>
 
     	</node>
 
