@@ -147,7 +147,7 @@ def move_direct(pose):
 	for t,d in twist_and_durations:
 		start_time = rospy.get_rostime()
 		duration = rospy.Duration.from_sec(d)
-                #this is hacky
+                #this is hacky light detection for pauses
 		if(d == pause_period ):
 			light_pub_1.publish(led.ORANGE)
 		while start_time + duration > rospy.get_rostime():
@@ -168,8 +168,29 @@ def move_direct(pose):
 	cmd_vel_pub.publish(Twist())
 	
 	
+def panic_mode():
+        global alternator
+	if(alternator == 1 ):
+        	duration_seconds = 3.0
+        	move_speed = -0.3
+       		rot_speed = 0.6
+		alternator = -alternator
+	else:
+        	duration_seconds = 3.0
+        	move_speed = 0.3
+       		rot_speed = -0.6
+		alternator = -alternator
+
+	start_time = rospy.get_rostime()
+	duration = rospy.Duration.from_sec(duration_seconds)
+	backup_twist = Twist()
+	backup_twist.angular.z = rot_speed
+        backup_twist.linear.x = move_speed
+	while start_time + duration > rospy.get_rostime():
+		cmd_vel_pub.publish(backup_twist)
 
 if __name__ == '__main__':
+	alternator = 1
 	NUM_LAPS = 2
 	SEARCH_PERIOD = 1
 	#SEARCH_PERIOD = 2
@@ -217,19 +238,22 @@ if __name__ == '__main__':
 
 			#print("Processing result")
 			if (client.get_state() == actionlib.simple_action_client.GoalStatus.SUCCEEDED):
-				print("Success")
-				fail_counter = 0
+				#print("Success")
 				light_pub_1.publish(led.BLACK)
 				light_pub_2.publish(led.BLACK)
 			else:
 				light_pub_1.publish(led.RED)
 				light_pub_2.publish(led.RED)
+				panic_mode()
 				#print("Failure, relocalizing")
 				#global_localize()
 				continue
 			
 			# play sound to indicate reaching of a waypoint
+			light_pub_2.publish(led.GREEN)
 			sound_pub.publish(WAYPOINT_SOUND)
+			rospy.sleep(0.05)
+			light_pub_2.publish(led.BLACK)
 
 			# Look for targets for a duration of time
 			gather_targets = True
@@ -243,7 +267,7 @@ if __name__ == '__main__':
 				if dock:
 					print("Docking with logo")
 					move_direct(logo_pose)
-					rospy.sleep(1)
+					#rospy.sleep(1)
 				else:
 					print("Found logo")
 			elif ar_found:
@@ -254,7 +278,7 @@ if __name__ == '__main__':
 				if dock:
 					print("Docking with AR code")
 					move_direct(ar_pose)
-					rospy.sleep(1)
+					#rospy.sleep(1)
 				else:
 					print("Found AR code")
 			logo_found = False
