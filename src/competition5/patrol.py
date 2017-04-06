@@ -4,6 +4,7 @@ import rospy
 import actionlib
 import sys
 import numpy as np
+import math
 from geometry_msgs.msg import Pose, Twist
 from kobuki_msgs.msg import Sound
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
@@ -105,46 +106,60 @@ def move_direct(pose):
 	print("Moving to target")
 	print(tvec_target)
 
+	rot_speed = 0.8
+	move_speed = 0.2
+	pause_period = 1
+
 	# first, turn to face the target
         rot_radians  = -(np.arctan(tvec_target[0] / tvec_target[2]))
-        rot_velocity = np.sign(rot_radians) * 0.8
+        rot_velocity = np.sign(rot_radians) * rot_speed
         rot_period   = rot_radians / rot_velocity
         rot_twist = Twist()
         rot_twist.angular.z = rot_velocity
         # second, move towards the checkerboard for .25m or within .1m
         move_meters = np.linalg.norm(tvec_target[np.array([0,2])])
         #print(np.linalg.norm(tvec_target[np.array([0,2])]))
-        move_velocity = 0.2
+        move_velocity = move_speed
         move_period   = move_meters / move_velocity
         move_twist = Twist()
         move_twist.linear.x = move_velocity
+
+	_180_radians = math.pi
+	_180_velocity = np.sign(_180_radians) * rot_speed
+	_180_period = _180_radians / _180_velocity
+	_180_twist = Twist()
+	_180_twist.angular.z = _180_velocity
 	
 	print("Rotation" + str(rot_twist))
 	print("RDuration" + str(rot_period))
 	print("Forward" + str(move_twist))
 	print("PDuration" + str(move_period))
 
-	start_time = rospy.get_rostime()
-	duration = rospy.Duration.from_sec(rot_period)
-	while start_time + duration > rospy.get_rostime():
-		cmd_vel_pub.publish(rot_twist)
+	twist_and_durations = [
+		(rot_twist, rot_period),
+		(move_twist, move_period),
+		(Twist(), pause_period),
+		(_180_twist, _180_period),
+		(move_twist, move_period)]
+	                       
 
-	#######################################
-	#back docking
-	'''
-	start_time = rospy.get_rostime()
-	duration = rospy.Duration.from_sec(np.pi / rot_velocity)
-	while start_time + duration > rospy.get_rostime():
-		cmd_vel_pub.publish(rot_twist)
-	move_twist.linear.x = - move_velocity
-	'''
-	#######################################
+	for t,d in twist_and_durations:
+		start_time = rospy.get_rostime()
+		duration = rospy.Duration.from_sec(d)
+		while start_time + duration > rospy.get_rostime():
+			cmd_vel_pub.publish(t)
+
+		#######################################
+		#back docking
+		'''
+		start_time = rospy.get_rostime()
+		duration = rospy.Duration.from_sec(np.pi / rot_velocity)
+		while start_time + duration > rospy.get_rostime():
+			cmd_vel_pub.publish(rot_twist)
+		move_twist.linear.x = - move_velocity
+		'''
+		#######################################
 	
-	start_time = rospy.get_rostime()
-	duration = rospy.Duration.from_sec(move_period)
-	while start_time + duration > rospy.get_rostime():
-		cmd_vel_pub.publish(move_twist)
-
 	cmd_vel_pub.publish(Twist())
 	
 	
